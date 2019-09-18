@@ -1,0 +1,56 @@
+# © 2019 Joseph Cameron - All Rights Reserved
+
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
+
+#option(JFC_BUILD_DEMO "Build the demo" ON)
+#option(JFC_BUILD_DOCS "Build documentation" ON)
+#option(JFC_BUILD_TESTS "Build unit tests" ON)
+
+add_subdirectory(thirdparty)
+
+jfc_project(executable #library
+    NAME "gdkaudio"
+    VERSION 0.0
+    DESCRIPTION "game development kit graphics lib"
+    C++_STANDARD 17
+    C_STANDARD 90
+    #TYPE STATIC
+
+    PUBLIC_INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        
+        #${gdkmemory_INCLUDE_DIRECTORIES}
+        #${gdkmath_INCLUDE_DIRECTORIES} 
+        #${simpleglfw_INCLUDE_DIRECTORIES}
+
+        #${GLEW_INCLUDE_DIR} # not currently used. must fix glfw/glew entanglement
+        #${glfw_INCLUDE_DIR} # this was required on windows to get access to glew. This is a good reason to separate the two # TODO: SEPARATE GLFW from GLEW
+    PRIVATE_INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+
+        ${openal-soft_INCLUDE_DIR}
+
+    LIBRARIES
+        ${openal-soft_LIBRARIES}
+
+    DEPENDENCIES
+        "OpenAL"
+
+    SOURCE_LIST
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+)
+
+#[[if (JFC_BUILD_DEMO)
+    add_subdirectory(demo)
+endif()
+
+if (JFC_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
+
+if (JFC_BUILD_DOCS)
+    add_subdirectory(docs)
+endif()]]
+

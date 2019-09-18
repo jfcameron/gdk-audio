@@ -1,0 +1,9 @@
+openal offers no static build option. beecause of this, openal's dynamic output must be installed to the system
+Is this acceptable?
+    The answer to this depends on the size of the bin. if its small, id rather write a cmake recipie that forces static lib build. if it is large (like assimp for example) then dynamic is best.. but brings up a new question: how to pass that requirement along to the user? Should invoking cmake on this project implicitly make and install the dependency to the system? That seems obnoxious. Should it do nothing, leave it up to the user to install it themselves? Makes using the lib a bit harder.. but maybe thats a good thing.
+
+    -==--=
+    backends. building by default fidns no backends. need to install one. tried PulseAudio: built without capabilies but was detected. will have to build by hand; brew bin is bad.
+    trying PortAudio now. Worked!
+
+    so backend that was the most painless for me (macos blah blah) was `brew install PortAudio`

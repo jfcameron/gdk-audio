@@ -1,0 +1,7 @@
+workspace/*
+
+*.swp
+
+!.keep
+!CMakeLists.txt
+!*.sh
