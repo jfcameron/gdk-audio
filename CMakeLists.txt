@@ -15,7 +15,7 @@ jfc_project(executable #library
     VERSION 0.0
     DESCRIPTION "game development kit graphics lib"
     C++_STANDARD 17
-    C_STANDARD 90
+    C_STANDARD 99
     #TYPE STATIC
 
     PUBLIC_INCLUDE_DIRECTORIES
