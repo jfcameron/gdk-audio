@@ -3,6 +3,12 @@
 
 //TODO think about hearing impaired support. likely gui would be subtitles with vectors pointing towards source. This would require getPosition, getMagntitude. Possibly getEffects, so you could subtitle "muffled" etc.
 
+#include <gdk/audio/context.h>
+#include <gdk/audio/emitter.h>
+#include <gdk/audio/sound.h>
+
+#include <gdk/audio/openal_context.h>
+
 #include <AL/al.h>
 #include <AL/alc.h>
 
@@ -18,116 +24,8 @@
 #define STB_ONLY
 #include "stb_vorbis.c"
 
-void show_info(stb_vorbis *v)
-{
-    if (!v) throw std::invalid_argument("must have a valid decoder instance");
-    
-    stb_vorbis_info info = stb_vorbis_get_info(v);
-    
-    printf("%d channels, %d samples/sec\n"
-        , info.channels
-        , info.sample_rate);
-    
-    printf("Predicted memory needed: %d (%d + %d)\n"
-        , info.setup_memory_required + info.temp_memory_required
-        , info.setup_memory_required
-        , info.temp_memory_required);
-}
-
 namespace gdk::audio
 {
-    /// \brief software connection to audio hardware, implementation global state goes here?
-    /// active device etc?
-    /// factories?
-    class context
-    {
-    public:
-        /// \brief list devices (headphone, speaker, ...) by name
-        //virtual std::vector<std::string> getDevices() = 0;
-
-        /// \brief change the current device by name
-        //virtual void setActiveDevice(const std::string &aDeviceName) = 0;
-
-        /// \brief factory methods for audio types; implementation dependenent types, hidden behind interface pointers
-
-        /// \brief factory method for context: user specifies implementation, gets a pContext
-
-        virtual ~context() = default;
-    };
-
-    /// \brief openal implementation of context
-    class openal_context : public context
-    {
-        using device_pointer_type = std::unique_ptr<ALCdevice, std::function<void(ALCdevice *const)>>;
-        using openal_context_pointer_type = std::unique_ptr<ALCcontext, std::function<void(ALCcontext *const)>>;
-
-        device_pointer_type m_pCurrentDevice;
-
-        openal_context_pointer_type m_pContext;
-
-public:
-        openal_context();
-        
-        virtual ~openal_context()
-        {
-            std::cout << "context dtored\n";
-        }
-    };
-
-    openal_context::openal_context()
-    : m_pCurrentDevice({
-        []()
-        {
-            //if (!alcIsExtensionPresent(0, "ALC_ENUMERATION_EXT")) 
-            {
-                auto device_buffer = alcOpenDevice(0); 
-                if (!device_buffer) throw std::runtime_error("could not initialize context on audio device");
-    
-                std::cout << "device is: " << alcGetString(device_buffer, ALC_DEVICE_SPECIFIER) << "\n";
-
-                return device_buffer;
-            }
-            //else
-            {
-                //TODO: offer a choice of devices? -> once better idea of api, build RAII abstraction, 
-                //ctor option will be device preference
-            }
-        }(),
-        [](ALCdevice *const p)
-        {
-            alcCloseDevice(p);
-        }})
-    , m_pContext({
-        [this]()
-        {
-            auto context_buffer = alcCreateContext(m_pCurrentDevice.get(), 0);
-
-            if (!alcMakeContextCurrent(context_buffer)) throw std::runtime_error("could not make initial audio context current!");
-
-            return context_buffer;
-        }(), 
-        [](ALCcontext *const p)
-        {
-            alcDestroyContext(p);
-        }})
-    {
-        //Check for errors after init and clear the error buffer.
-        if (const auto error = alGetError(); error != AL_NO_ERROR) throw std::runtime_error("error!!!");
-    }
-    
-    /// \brief user-facing interface to a sound
-    /// sound is the resource type, represents a playable piece of audio. 
-    /// generally abstraction of one or many buffers containing decoded audio data (PCM (pulse-code modulated audio))
-    class sound
-    {
-    public:
-        //gettimeInSeconds
-
-        //getchannelCount (mono, stero)
-
-        virtual ~sound() = default;
-    };
-
     /// \brief OpenAL implementation of sound
     /// TODO: streaming from file results in a NOT SIMPLE resource type. each instance must own its own data (decoder's decoded PCM buffers). Will have to split into a sibling, openal_stream proper should represent a single openal pcm buffer where all data is decoded upfront, thus becoming a sharable resource that does not incur significant per instance cost (additional buffer allocations)
     /// analogous to a vertex buffer in OpenGL
@@ -176,7 +74,7 @@ public:
     openal_stream::~openal_stream()
     {
         std::cout << "deleted stream\n";
-        alDeleteBuffers(m_alBufferHandles.size(), &m_alBufferHandles.front());
+        alDeleteBuffers(m_alBufferHandles.size(), &m_alBufferHandles.front()); //wrong. use smart handle
     }
 
     openal_stream::openal_stream(const std::string &aOggVorbisFileName) : openal_stream([&aOggVorbisFileName]()
@@ -267,21 +165,12 @@ public:
         virtual ~scene() = default;
     };
 
-    /// \brief emits a sound at a 3d position with effects
-    /// has velocity relative to the current listener, creating doppler effect etc.
-    class emitter
+    class openal_scene : public scene
     {
+        std::vector<emitter> m_pEmitters;
     public:
-        /// \brief emit the specified sound
-        //virtual void start(sound *const pSound) = 0;
-
-        /// \brief stops emitting sound
-        //virtual void stop() = 0;
-        //play(pSound) ?
-
-        virtual void play() = 0;
-
-        virtual ~emitter() = default;
+        
+        
     };
 
     class openal_emitter : public emitter
@@ -317,8 +206,8 @@ public:
                     ALuint which;
                     alSourceUnqueueBuffers(m_alSourceHandle, 1, &which);
 
-                    /*//This part has to be refactored into stream I think. I guess a play method?
-                    if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
+                    //This part has to be refactored into stream I think. I guess a play method?
+                    /*if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
                     {
                         // load next m_PCMBuffer.size() of data into the used buffer then requeue it
                         alBufferData(which, format, &m_PCMBuffer.front(), amount * 2 * sizeof(short), m_VorbisInfo.sample_rate);
@@ -340,6 +229,8 @@ public:
 
 int main(int argc, char **argv)
 {
+    if (argc != 2) throw std::invalid_argument("program requires 1 paramter: path to an ogg vorbis file\n");
+
     auto pContext = std::unique_ptr<gdk::audio::context>(new gdk::audio::openal_context());
 
     {
