@@ -50,8 +50,7 @@ int streaming_decode_main(int argc, char **argv)
 
     //////////// OGG VORBIS file to decoder
     int error = 0;
-    stb_vorbis_alloc *alloc;
-    stb_vorbis *vorbis = stb_vorbis_open_filename(argv[1], &error, alloc);
+    stb_vorbis *vorbis = stb_vorbis_open_filename(argv[1], &error, nullptr);
 
     if (argc != 2) throw std::invalid_argument("program requires 1 arg: the ogg file!");
     if (error != 0) throw std::invalid_argument(std::string("could not load file: ") + argv[1]);
