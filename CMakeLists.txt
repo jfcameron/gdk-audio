@@ -19,17 +19,11 @@ jfc_project(executable #library
     #TYPE STATIC
 
     PUBLIC_INCLUDE_DIRECTORIES
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        
-        #${gdkmemory_INCLUDE_DIRECTORIES}
-        #${gdkmath_INCLUDE_DIRECTORIES} 
-        #${simpleglfw_INCLUDE_DIRECTORIES}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/
 
-        #${GLEW_INCLUDE_DIR} # not currently used. must fix glfw/glew entanglement
-        #${glfw_INCLUDE_DIR} # this was required on windows to get access to glew. This is a good reason to separate the two # TODO: SEPARATE GLFW from GLEW
     PRIVATE_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-
+        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/include
         ${openal-soft_INCLUDE_DIR}
 
     LIBRARIES
@@ -40,6 +34,7 @@ jfc_project(executable #library
 
     SOURCE_LIST
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_context.cpp
 )
 
 #[[if (JFC_BUILD_DEMO)
