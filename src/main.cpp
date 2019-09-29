@@ -29,12 +29,15 @@ int main(int argc, char **argv)
 
     auto pContext = std::unique_ptr<gdk::audio::context>(new gdk::audio::openal_context());
 
+    std::shared_ptr<gdk::audio::sound> pStream(new gdk::audio::openal_stream(argv[1]));//auto pStream = std::make_shared<gdk::audio::sound>(gdk::audio::openal_stream(argv[1]));
+
+    auto pEmitter(std::unique_ptr<gdk::audio::openal_emitter>(new gdk::audio::openal_emitter(std::dynamic_pointer_cast<gdk::audio::openal_stream>(pStream))));
+
+    pEmitter->play();
+
+    while (pEmitter->isPlaying())
     {
-        std::shared_ptr<gdk::audio::sound> pStream(new gdk::audio::openal_stream(argv[1]));//auto pStream = std::make_shared<gdk::audio::sound>(gdk::audio::openal_stream(argv[1]));
-
-        auto pEmitter(std::unique_ptr<gdk::audio::emitter>(new gdk::audio::openal_emitter(std::dynamic_pointer_cast<gdk::audio::openal_stream>(pStream))));
-
-        pEmitter->play();
+        pEmitter->update();
     }
 
     return EXIT_SUCCESS;
