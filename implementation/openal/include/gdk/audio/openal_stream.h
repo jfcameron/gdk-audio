@@ -4,7 +4,9 @@
 #define GDK_AUDIO_OPENAL_STREAM_H
 
 #include <gdk/audio/stb_vorbis.h>
-#include <gdk/audio/sound.h>
+#include <gdk/audio/openal_sound.h>
+
+#include <jfc/memory/smart_handle.h>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -19,7 +21,7 @@ namespace gdk::audio
     /// \warn instances of stream are heavy. Each instance has its own decoder, which has two streaming buffers it fills with decoded PCM data from the encoded raw data. Together these are about 1/4mb wide.
         /// TODO: streaming from file results in a NOT SIMPLE resource type. each instance must own its own data (decoder's decoded PCM buffers). Will have to split into a sibling, openal_stream proper should represent a single openal pcm buffer where all data is decoded upfront, thus becoming a sharable resource that does not incur significant per instance cost (additional buffer allocations)
             /// analogous to a vertex buffer in OpenGL
-    class openal_stream : public sound
+    class openal_stream : public openal_sound
     {
         using raw_file_type = std::vector<unsigned char>;
         using vorbis_decoder_pointer_type = std::unique_ptr<stb_vorbis, std::function<void(stb_vorbis *const)>>;
@@ -40,10 +42,10 @@ namespace gdk::audio
         ALenum m_Format;
 
         /// \brief handles to the albuffers we write PCMbuffer to as they are depleted then re-enqueued for playback
-        std::array<ALuint, 2> m_alBufferHandles;
+        jfc::memory::smart_handle<std::array<ALuint, 2>> m_alBufferHandles;
 
     public:
-        decltype(m_alBufferHandles) getAlBufferHandles();
+        virtual std::vector<ALuint> getAlBufferHandles() override;
 
         /// \brief creates a new audio stream on the same encoded data.
         //clone

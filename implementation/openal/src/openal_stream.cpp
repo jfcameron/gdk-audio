@@ -8,14 +8,13 @@
 namespace gdk::audio
 {
 
-    decltype(openal_stream::m_alBufferHandles) openal_stream::getAlBufferHandles()
+    std::vector<ALuint> openal_stream::getAlBufferHandles()
     {
-        return m_alBufferHandles;
+        return {m_alBufferHandles.get().begin(), m_alBufferHandles.get().end()};
     }
 
     openal_stream::~openal_stream()
     {
-        alDeleteBuffers(m_alBufferHandles.size(), &m_alBufferHandles.front()); //wrong. use smart handle
     }
 
     openal_stream::openal_stream(const std::string &aOggVorbisFileName) : openal_stream([&aOggVorbisFileName]()
@@ -47,8 +46,11 @@ namespace gdk::audio
         }
     })
     , m_VorbisInfo(stb_vorbis_get_info(m_pDecoder.get()))
+    , m_alBufferHandles([&]()
     {
-        alGenBuffers(m_alBufferHandles.size(), &m_alBufferHandles.front());
+        decltype(m_alBufferHandles)::handle_type newBufferHandles;
+
+        alGenBuffers(newBufferHandles.size(), &newBufferHandles.front());
 
         const ALenum format = [](int channelCount)
         {
@@ -64,43 +66,27 @@ namespace gdk::audio
         //TODO clean this up
         m_Format = format;
 
-        for (const auto &current_handle : m_alBufferHandles)
+        for (const auto &current_handle : newBufferHandles)
         {
-            stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size());
-            alBufferData(current_handle, format, &m_PCMBuffer.front(), m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type), m_VorbisInfo.sample_rate);
+            stb_vorbis_get_samples_short_interleaved(m_pDecoder.get()
+                , m_VorbisInfo.channels
+                , &m_PCMBuffer.front()
+                , m_PCMBuffer.size());
+
+            alBufferData(current_handle
+                , format
+                , &m_PCMBuffer.front()
+                , m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type)
+                , m_VorbisInfo.sample_rate);
         }
 
-//=--==--=123=-12=-321=-3=-21-=21=-32-=123-=132=-132-
-/*        //gen source -> source should be moved to separate abstraction. (move to emitter, that is where spacial state will come in)
-        ALuint m_alSourceHandle;
-        alGenSources(1, &m_alSourceHandle);
-
-        //queue buffers to the sound m_alSourceHandle and play
-        alSourceQueueBuffers(m_alSourceHandle, 2, &m_alBufferHandles.front());
-
-        // =-=--=-= play -=---=-==
-        alSourcePlay(m_alSourceHandle);
-
-        for(;;)
-        {
-            ALint processed;
-            alGetSourcei(m_alSourceHandle, AL_BUFFERS_PROCESSED, &processed);
-
-            if (processed)
-            {
-                ALuint which;
-                alSourceUnqueueBuffers(m_alSourceHandle, 1, &which);
-
-                if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
-                {
-                    // load next m_PCMBuffer.size() of data into the used buffer then requeue it
-                    alBufferData(which, format, &m_PCMBuffer.front(), amount * 2 * sizeof(short), m_VorbisInfo.sample_rate);
-                    alSourceQueueBuffers(m_alSourceHandle, 1, &which);
-                }
-                else break; //reliable exit condition?
-            }
-        }*/
-    }
+        return newBufferHandles;
+    }(),
+    [](const decltype(m_alBufferHandles)::handle_type a)
+    {
+        alDeleteBuffers(a.size(), &a.front());
+    })
+    {}
 
     bool openal_stream::decodeNextSamples(ALuint aOutputPCMBuffer)    
     {
@@ -115,7 +101,6 @@ namespace gdk::audio
 
             return true;
         }
-        //else break; //reliable exit condition? yes.
 
         return false;
     }

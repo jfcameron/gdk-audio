@@ -5,7 +5,9 @@
 
 #include <gdk/audio/emitter.h>
 
-#include <gdk/audio/openal_stream.h>
+#include <gdk/audio/openal_sound.h>
+
+#include <jfc/memory/smart_handle.h>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -23,13 +25,18 @@ namespace gdk::audio
         }
         m_state = state::stopped;
         
-        ALuint m_alSourceHandle;
+        jfc::memory::smart_handle<ALuint> m_alSourceHandle;
 
-        //std::shared_ptr<> m_pSound;
-        std::shared_ptr<openal_stream> m_pStream;
+        std::shared_ptr<openal_sound> m_pStream;
+
+        enum class sound_type
+        {
+            simple,
+            stream
+        } m_SoundType;
 
     public:
-        openal_emitter(std::shared_ptr<openal_stream> pStream);
+        openal_emitter(std::shared_ptr<openal_sound> pStream);
 
         void play() override;
 

@@ -20,8 +20,9 @@
 
 //TODO remove
 #include <gdk/audio/openal_context.h>
-#include <gdk/audio/openal_stream.h>
 #include <gdk/audio/openal_emitter.h>
+#include <gdk/audio/openal_simple_sound.h>
+#include <gdk/audio/openal_stream.h>
 
 int main(int argc, char **argv)
 {
@@ -29,9 +30,10 @@ int main(int argc, char **argv)
 
     auto pContext = std::unique_ptr<gdk::audio::context>(new gdk::audio::openal_context());
 
-    std::shared_ptr<gdk::audio::sound> pStream(new gdk::audio::openal_stream(argv[1]));//auto pStream = std::make_shared<gdk::audio::sound>(gdk::audio::openal_stream(argv[1]));
+    std::shared_ptr<gdk::audio::sound> pStream(new gdk::audio::openal_stream(argv[1]));
+    std::shared_ptr<gdk::audio::sound> pSimple(new gdk::audio::openal_simple_sound(argv[1]));
 
-    auto pEmitter(std::unique_ptr<gdk::audio::openal_emitter>(new gdk::audio::openal_emitter(std::dynamic_pointer_cast<gdk::audio::openal_stream>(pStream))));
+    std::unique_ptr<gdk::audio::openal_emitter> pEmitter(new gdk::audio::openal_emitter(std::dynamic_pointer_cast<gdk::audio::openal_sound>(pStream)));
 
     pEmitter->play();
 
