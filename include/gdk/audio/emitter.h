@@ -3,6 +3,8 @@
 #ifndef GDK_AUDIO_EMITTER_H
 #define GDK_AUDIO_EMITTER_H
 
+#include <functional>
+
 namespace gdk::audio
 {
     /// \brief emits a sound at a 3d position with effects
@@ -18,6 +20,8 @@ namespace gdk::audio
         //play(pSound) ?
 
         virtual void play() = 0;
+
+        virtual bool isPlaying() = 0;
 
         virtual ~emitter() = default;
     };

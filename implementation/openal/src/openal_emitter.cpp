@@ -16,28 +16,42 @@ namespace gdk::audio
 
         alSourceQueueBuffers(m_alSourceHandle, handles.size(), &handles.front());
 
-        // =-=--=-= play -=---=-==
         alSourcePlay(m_alSourceHandle);
 
-        for(;;)
+        m_state = state::playing;
+    }
+
+    bool openal_emitter::isPlaying()
+    {
+        return m_state == state::playing;
+    }
+
+    void openal_emitter::update()
+    {
+        switch (m_state)
         {
-            ALint processed;
-            alGetSourcei(m_alSourceHandle, AL_BUFFERS_PROCESSED, &processed);
-
-            if (processed)
+            case state::playing:
             {
-                ALuint which;
-                alSourceUnqueueBuffers(m_alSourceHandle, 1, &which);
+                ALint processed;
+                alGetSourcei(m_alSourceHandle, AL_BUFFERS_PROCESSED, &processed);
 
-                //This part has to be refactored into stream I think. I guess a play method?
-                /*if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
+                if (processed)
                 {
-                    // load next m_PCMBuffer.size() of data into the used buffer then requeue it
-                    alBufferData(which, format, &m_PCMBuffer.front(), amount * 2 * sizeof(short), m_VorbisInfo.sample_rate);
-                    alSourceQueueBuffers(m_alSourceHandle, 1, &which);
+                    ALuint which;
+                    alSourceUnqueueBuffers(m_alSourceHandle, 1, &which);
+
+                    if (m_pStream->decodeNextSamples(which))
+                    {
+                        alSourceQueueBuffers(m_alSourceHandle, 1, &which);
+                    }
+                    else 
+                    {
+                        m_state = state::stopped;
+                    }
                 }
-                else break; //reliable exit condition? yes.*/
-            }
+            } break;
+
+            default: break;
         }
     }
 }

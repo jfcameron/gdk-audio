@@ -37,6 +37,8 @@ namespace gdk::audio
         //static constexpr int chunk = 16384;//2^14 works. // sample decoding code used 65536 ie 2^16 when allocating pcm buffers. This results in 512kb PCM *2 buffers so 1mb per decoder instance. 2^14 results in 0.25mb total. Smaller buffers fail with my test input file. I expect a learning point around this coming in the future.
         pcm_buffer_type m_PCMBuffer;
 
+        ALenum m_Format;
+
         /// \brief handles to the albuffers we write PCMbuffer to as they are depleted then re-enqueued for playback
         std::array<ALuint, 2> m_alBufferHandles;
 
@@ -51,6 +53,12 @@ namespace gdk::audio
 
         ///\brief build from filename
         openal_stream(const std::string &aOggVorbisFileName);
+
+        ///\brief decodes the next chunk of data, writing to the specified AL buffer
+        ///\warn this is an example of the statefulness of this object.
+        /// return true indicates more data to play, emitter should continue
+        /// return false indicates the decoder has reached end of vorbis data, emit should stop
+        bool decodeNextSamples(ALuint aOutputPCMBuffer);
 
         virtual ~openal_stream();
     };

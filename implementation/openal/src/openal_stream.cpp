@@ -15,7 +15,6 @@ namespace gdk::audio
 
     openal_stream::~openal_stream()
     {
-        std::cout << "deleted stream\n";
         alDeleteBuffers(m_alBufferHandles.size(), &m_alBufferHandles.front()); //wrong. use smart handle
     }
 
@@ -62,6 +61,9 @@ namespace gdk::audio
             throw std::invalid_argument("unsupported channel count in ogg vorbis file");
         }(m_VorbisInfo.channels);
 
+        //TODO clean this up
+        m_Format = format;
+
         for (const auto &current_handle : m_alBufferHandles)
         {
             stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size());
@@ -98,6 +100,24 @@ namespace gdk::audio
                 else break; //reliable exit condition?
             }
         }*/
+    }
+
+    bool openal_stream::decodeNextSamples(ALuint aOutputPCMBuffer)    
+    {
+        if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), 
+                    m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
+        {
+            alBufferData(aOutputPCMBuffer
+                    , m_Format
+                    , &m_PCMBuffer.front()
+                    , amount * 2 * sizeof(short)
+                    , m_VorbisInfo.sample_rate);
+
+            return true;
+        }
+        //else break; //reliable exit condition? yes.
+
+        return false;
     }
 }
 
