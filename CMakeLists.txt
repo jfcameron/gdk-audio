@@ -34,7 +34,11 @@ jfc_project(executable #library
 
     SOURCE_LIST
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
+        
         ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_context.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_emitter.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_stream.cpp
 )
 
 #[[if (JFC_BUILD_DEMO)
