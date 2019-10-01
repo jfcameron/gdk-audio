@@ -26,14 +26,13 @@
 
 int main(int argc, char **argv)
 {
-    if (argc != 2) throw std::invalid_argument("program requires 1 paramter: path to an ogg vorbis file\n");
+    if (argc != 2) throw std::invalid_argument("program requires 1 paramter: path to a supported audio file type (ogg vorbis)\n");
 
-    auto pContext = std::unique_ptr<gdk::audio::context>(new gdk::audio::openal_context());
+    auto pContext = gdk::audio::context::make(gdk::audio::context::implementation::OpenAL);
 
-    std::shared_ptr<gdk::audio::sound> pStream(new gdk::audio::openal_stream(argv[1]));
-    std::shared_ptr<gdk::audio::sound> pSimple(new gdk::audio::openal_simple_sound(argv[1]));
+    auto pSound(pContext->makeSound(argv[1]));
 
-    std::unique_ptr<gdk::audio::openal_emitter> pEmitter(new gdk::audio::openal_emitter(std::dynamic_pointer_cast<gdk::audio::openal_sound>(pStream)));
+    std::unique_ptr<gdk::audio::openal_emitter> pEmitter(new gdk::audio::openal_emitter(std::static_pointer_cast<gdk::audio::openal_sound>(pSound)));
 
     pEmitter->play();
 
