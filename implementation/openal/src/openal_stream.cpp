@@ -23,11 +23,11 @@ namespace gdk::audio
 
         if (!in.is_open()) throw std::invalid_argument("could not open file: " + aOggVorbisFileName);
         
-        return std::make_shared<raw_file_type>(std::vector<unsigned char>((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>()));
+        return std::make_shared<file_buffer_type>(std::vector<unsigned char>((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>()));
     }())
     {}
 
-    openal_stream::openal_stream(const std::shared_ptr<raw_file_type> aOggVorbisData)
+    openal_stream::openal_stream(const std::shared_ptr<file_buffer_type> aOggVorbisData)
     : m_pOggVorbisFileBuffer(aOggVorbisData)
     , m_pDecoder({
         [&]()
@@ -90,14 +90,14 @@ namespace gdk::audio
 
     bool openal_stream::decodeNextSamples(ALuint aOutputPCMBuffer)    
     {
-        if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(), 
-                    m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
+        if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get()
+            , m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
         {
             alBufferData(aOutputPCMBuffer
-                    , m_Format
-                    , &m_PCMBuffer.front()
-                    , amount * 2 * sizeof(short)
-                    , m_VorbisInfo.sample_rate);
+                , m_Format
+                , &m_PCMBuffer.front()
+                , m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type)
+                , m_VorbisInfo.sample_rate);
 
             return true;
         }
