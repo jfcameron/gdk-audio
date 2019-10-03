@@ -19,8 +19,10 @@ namespace gdk::audio
         //virtual void stop() = 0;
         //play(pSound) ?
 
+        /// \brief begins emitting the attached sound TODO rename to emit?
         virtual void play() = 0;
 
+        /// \brief check if the emitter is emitting a sound
         virtual bool isPlaying() = 0;
 
         virtual ~emitter() = default;

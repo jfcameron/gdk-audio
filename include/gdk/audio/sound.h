@@ -3,6 +3,8 @@
 #ifndef GDK_AUDIO_SOUND_H
 #define GDK_AUDIO_SOUND_H
 
+#include <vector>
+
 namespace gdk::audio
 {
     /// \brief user-facing interface to a sound
@@ -11,6 +13,7 @@ namespace gdk::audio
     class sound
     {
     public:
+        using file_buffer_type = std::vector<unsigned char>;
         //gettimeInSeconds
 
         //getchannelCount(mono, stero)
