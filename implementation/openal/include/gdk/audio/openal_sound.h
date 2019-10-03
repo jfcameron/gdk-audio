@@ -16,7 +16,9 @@ namespace gdk::audio
     class openal_sound : public sound
     {
     public:
-         virtual std::vector<ALuint> getAlBufferHandles() = 0;       
+        using file_buffer_type = std::vector<unsigned char>;
+
+        virtual std::vector<ALuint> getAlBufferHandles() = 0;       
     };
 }
 

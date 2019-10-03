@@ -16,34 +16,29 @@
 
 namespace gdk::audio
 {
+    /// \brief root emitter type for openal impl.
+    /// provides a common ancestor for collections etc that do not care about
+    /// the specific differences between streamers (multi buffer, constant decoding) and simples (single buffer, 1 decode at sound ctor time)
     class openal_emitter : public emitter
     {
+        jfc::memory::smart_handle<ALuint> m_alSourceHandle;
+
+    protected:
         enum class state
         {
             playing,
             stopped
         }
         m_state = state::stopped;
-        
-        jfc::memory::smart_handle<ALuint> m_alSourceHandle;
 
-        std::shared_ptr<openal_sound> m_pStream;
-
-        enum class sound_type
-        {
-            simple,
-            stream
-        } m_SoundType;
+        ALuint getSourceHandle();
 
     public:
-        openal_emitter(std::shared_ptr<openal_sound> pStream);
-
-        void play() override;
+        openal_emitter();
 
         bool isPlaying() override;
 
-        ///
-        void update();
+        virtual void update() = 0;
     };
 }
 
