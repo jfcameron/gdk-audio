@@ -11,34 +11,28 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#include <array>
 #include <cstdlib>
-#include <fstream>
-#include <iostream>
 #include <stdexcept>
-#include <vector>
-
-//TODO remove
-#include <gdk/audio/openal_context.h>
-#include <gdk/audio/openal_emitter.h>
-#include <gdk/audio/openal_simple_sound.h>
-#include <gdk/audio/openal_stream.h>
+#include <string>
 
 int main(int argc, char **argv)
 {
     if (argc != 2) throw std::invalid_argument("program requires 1 paramter: path to a supported audio file type (ogg vorbis)\n");
 
     auto pContext = gdk::audio::context::make(gdk::audio::context::implementation::OpenAL);
-
-    auto pSound(pContext->makeSound(argv[1]));
-
-    std::unique_ptr<gdk::audio::openal_emitter> pEmitter(new gdk::audio::openal_emitter(std::static_pointer_cast<gdk::audio::openal_sound>(pSound)));
-
-    pEmitter->play();
-
-    while (pEmitter->isPlaying())
     {
-        pEmitter->update();
+        auto pSound(pContext->makeSound(std::string(argv[1])));
+        {
+            auto pEmitter(pContext->makeEmitter(pSound));
+
+            pEmitter->play();
+
+            // This is our "game update loop". In this case, the game will quit our emitter has stopped emitting.
+            while (pEmitter->isPlaying())
+            {
+                pContext->update();
+            }
+        }
     }
 
     return EXIT_SUCCESS;
