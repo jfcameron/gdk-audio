@@ -3,4 +3,4 @@
 	url = https://github.com/jfcameron/jfc-cmake.git
 [submodule "thirdparty/openal-soft"]
 	path = thirdparty/openal-soft
-	url = https://github.com/kcat/openal-soft.git
+	url = https://github.com/jfcameron/openal-soft.git

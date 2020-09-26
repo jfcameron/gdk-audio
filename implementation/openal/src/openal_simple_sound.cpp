@@ -7,12 +7,11 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <fstream>
-#include <iostream>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <string>
 
 namespace gdk::audio
 { 
@@ -41,7 +40,7 @@ namespace gdk::audio
             short *data;
             auto samples = stb_vorbis_decode_memory(&aFileBuffer.front(), aFileBuffer.size(), &channels, &sample_rate, &data);
 
-            if (!samples) throw std::runtime_error("could not decode the ogg vorbis file");
+            if (!samples) throw std::runtime_error("could not decode the ogg vorbis file buffer");
 
             std::vector<short> pcmBuffer(data, data + (2 * samples));
             

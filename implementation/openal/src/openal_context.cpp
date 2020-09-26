@@ -54,12 +54,11 @@ namespace gdk::audio
 
     std::shared_ptr<sound> openal_context::makeSound(const std::string &aOggVorbisFileName)
     {
-        
         std::ifstream in(aOggVorbisFileName, std::ios::in | std::ios::binary);
-
-        if (!in.is_open()) throw std::invalid_argument("could not open file: " + aOggVorbisFileName);
-        
-        return makeSound(openal_sound::file_buffer_type((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>()));
+	
+		if (!in.is_open()) throw std::invalid_argument("could not open file: " + aOggVorbisFileName);
+	    
+		return makeSound(openal_sound::file_buffer_type((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>()));
     }
     
     std::shared_ptr<sound> openal_context::makeSound(const openal_sound::file_buffer_type fileBuffer)
