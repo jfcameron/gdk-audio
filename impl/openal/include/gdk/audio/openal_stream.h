@@ -6,7 +6,7 @@
 #include <gdk/audio/stb_vorbis.h>
 #include <gdk/audio/openal_sound.h>
 
-#include <jfc/memory/smart_handle.h>
+#include <jfc/shared_handle.h>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -43,7 +43,7 @@ namespace gdk::audio
         ALenum m_Format;
 
         /// \brief handles to the albuffers we write PCMbuffer to as they are depleted then re-enqueued for playback
-        jfc::memory::smart_handle<std::array<ALuint, 2>> m_alBufferHandles;  // -> TODO  EXTRINSIC
+        jfc::shared_handle<std::array<ALuint, 2>> m_alBufferHandles;  // -> TODO  EXTRINSIC
 
     public:
         virtual std::vector<ALuint> getAlBufferHandles() override;

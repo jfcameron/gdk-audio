@@ -1,6 +1,6 @@
 # © 2019 Joseph Cameron - All Rights Reserved
 
-#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/openal-soft")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/jfc-smart_handles")
 
 set(dependencies
     "openal-soft"

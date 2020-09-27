@@ -6,7 +6,7 @@
 #include <gdk/audio/openal_emitter.h>
 #include <gdk/audio/openal_simple_sound.h>
 
-#include <jfc/memory/smart_handle.h>
+#include <jfc/shared_handle.h>
 
 #include <AL/al.h>
 #include <AL/alc.h>

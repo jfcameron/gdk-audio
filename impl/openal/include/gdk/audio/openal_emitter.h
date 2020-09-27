@@ -7,7 +7,7 @@
 
 #include <gdk/audio/openal_sound.h>
 
-#include <jfc/memory/smart_handle.h>
+#include <jfc/shared_handle.h>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -21,7 +21,7 @@ namespace gdk::audio
     /// the specific differences between streamers (multi buffer, constant decoding) and simples (single buffer, 1 decode at sound ctor time)
     class openal_emitter : public emitter
     {
-        jfc::memory::smart_handle<ALuint> m_alSourceHandle;
+        jfc::shared_handle<ALuint> m_alSourceHandle;
 
     protected:
         enum class state

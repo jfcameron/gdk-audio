@@ -9,7 +9,9 @@ namespace gdk::audio
 {
     std::vector<ALuint> openal_stream::getAlBufferHandles()
     {
-        return {m_alBufferHandles.get().begin(), m_alBufferHandles.get().end()};
+		auto handles = m_alBufferHandles.get();
+
+        return { handles.begin(), handles.end()};
     }
 
     openal_stream::openal_stream(const std::string &aOggVorbisFileName) : openal_stream([&aOggVorbisFileName]()
@@ -92,28 +94,20 @@ namespace gdk::audio
 			&m_PCMBuffer.front(),
 			m_PCMBuffer.size()))
 		{
-			std::cout << "hello?\n";
-
 			alBufferData(aOutputPCMBuffer
 				, m_Format
 				, &m_PCMBuffer.front()
 				, m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type)
 				, m_VorbisInfo.sample_rate);
 
-			//stb_vorbis_seek_start(m_pDecoder.get());
-
 			return true;
 		}
 		else
 		{
-			std::cout << "out of data\n";
-
 			stb_vorbis_seek_start(m_pDecoder.get());
 
-			//m_alBufferHandles.
-
-			// This is where the issue is!
-			m_alBufferHandles = { [&]()
+			// This is where the issue is! -> reuse buffers, dont throw them away.
+			m_alBufferHandles = jfc::shared_handle<std::array<ALuint, 2>>{ [&]()
 			{
 				decltype(m_alBufferHandles)::handle_type newBufferHandles;
 

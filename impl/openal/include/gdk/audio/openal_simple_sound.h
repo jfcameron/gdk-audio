@@ -5,7 +5,7 @@
 
 #include <gdk/audio/openal_sound.h>
 
-#include <jfc/memory/smart_handle.h>
+#include <jfc/shared_handle.h>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -22,7 +22,7 @@ namespace gdk::audio
         using file_buffer_type = std::vector<unsigned char>;
 
     private:
-        jfc::memory::smart_handle<ALuint> m_ALBufferHandle;
+        jfc::shared_handle<ALuint> m_ALBufferHandle;
 
     public:
         virtual std::vector<ALuint> getAlBufferHandles() override;

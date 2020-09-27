@@ -27,6 +27,7 @@ jfc_project(executable #library
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include
         ${openal-soft_INCLUDE_DIR}
+		${jfc-smart_handles_INCLUDE_DIRECTORIES}
 
     LIBRARIES
         ${openal-soft_LIBRARIES}
