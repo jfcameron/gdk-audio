@@ -12,13 +12,13 @@ project(null)
 
 add_subdirectory(thirdparty)
 
-jfc_project(executable #library
+jfc_project(library #executable
     NAME "gdkaudio"
     VERSION 0.0
     DESCRIPTION "game development kit graphics lib"
     C++_STANDARD 17
     C_STANDARD 99
-    #TYPE STATIC
+    TYPE STATIC
 
     PUBLIC_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/include/
@@ -38,7 +38,7 @@ jfc_project(executable #library
     SOURCE_LIST
 		${CMAKE_CURRENT_SOURCE_DIR}/src/audio_data.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
 		
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp

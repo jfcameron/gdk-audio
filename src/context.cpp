@@ -10,7 +10,7 @@ namespace gdk::audio
     {
         switch(impl)
         {
-            case implementation::OpenAL: return std::unique_ptr<context>(new openal_context());
+            case implementation::openal: return std::unique_ptr<context>(new openal_context());
         }
         
         throw std::invalid_argument("Could not create a context of requested type");

@@ -20,14 +20,20 @@ namespace gdk::audio
     class context
     {
     public:
+		//! type returned by context factory
+		using implementation_unique_ptr_type = std::unique_ptr<context>;
+
+		//!
+		using implementation_shared_ptr_type = std::shared_ptr<context>;
+
         /// \brief used to specify implementation behind context::make
 		enum class implementation
 		{
-			OpenAL
+			openal
 		};
 
         /// \brief factory method, creates a context of specified implementation
-        static std::unique_ptr<context> make(implementation impl);
+        static implementation_unique_ptr_type make(implementation impl);
 
         /// \brief builds a sound from a filebuffer
         /// \warn throws if the buffer does not contain encoded audio data of a type the context supports
@@ -36,16 +42,10 @@ namespace gdk::audio
         /// \brief builds an emitter from a pointer to a sound
         virtual std::shared_ptr<emitter> make_emitter(std::shared_ptr<sound> aSound) = 0;
 
+		//TODO: audio scene make
+
         /// \brief loop behaviour; must be called in your update loop for gdk::audio to behave correctly
         virtual void update() = 0;
-
-		/// \brief list devices (headphone, speaker, ...) by name
-		//virtual std::vector<std::string> getDevices() = 0;
-
-		/// \brief change the current device by name
-		//virtual void setActiveDevice(const std::string &aDeviceName) = 0;
-
-        /// TODO: cleanup methods? In openal case cleanup is very stateful (cannot free buffers that are "in use" (attached to a source) etc.
 
         virtual ~context() = default;
     };
