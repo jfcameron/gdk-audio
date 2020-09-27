@@ -9,6 +9,8 @@
 #include <AL/alc.h>
 
 #include <vector>
+#include <cstddef>
+#include <type_traits>
 
 namespace gdk::audio
 {
@@ -16,6 +18,7 @@ namespace gdk::audio
     class openal_sound : public sound
     {
     public:
+		//std::underlying_type<std::byte>
         using file_buffer_type = std::vector<unsigned char>;
 
         virtual std::vector<ALuint> getAlBufferHandles() = 0;       

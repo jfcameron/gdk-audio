@@ -31,13 +31,14 @@ namespace gdk::audio
         std::shared_ptr<file_buffer_type> m_pOggVorbisFileBuffer; 
 
         /// \brief decodes vorbis data to the PCM buffers, expanding the encoded data in small parts, until the entire file has been streamed.
-        vorbis_decoder_pointer_type m_pDecoder; // -> TODO EXTRINSIC
+        vorbis_decoder_pointer_type m_pDecoder;
 
         /// \brief contains metadata to do with vorbis file (channel count, legnth in seconds, etc.)
         stb_vorbis_info m_VorbisInfo;
 
-        //static constexpr int chunk = 16384;//2^14 works. // sample decoding code used 65536 ie 2^16 when allocating pcm buffers. This results in 512kb PCM *2 buffers so 1mb per decoder instance. 2^14 results in 0.25mb total. Smaller buffers fail with my test input file. I expect a learning point around this coming in the future.
-        pcm_buffer_type m_PCMBuffer; // -> TODO EXTRINSIC
+        //static constexpr int chunk = 16384;//2^14 works. // sample decoding code used 65536 ie 2^16 when allocating pcm buffers. 
+		// This results in 512kb PCM *2 buffers so 1mb per decoder instance. 2^14 results in 0.25mb total. Smaller buffers fail with my test input file. I expect a learning point around this coming in the future.
+        pcm_buffer_type m_PCMBuffer;
 
         ALenum m_Format;
 
@@ -61,8 +62,6 @@ namespace gdk::audio
         /// return true indicates more data to play, emitter should continue
         /// return false indicates the decoder has reached end of vorbis data, emit should stop
         bool decodeNextSamples(ALuint aOutputPCMBuffer); // -> TODO EXTRINSIC
-
-        virtual ~openal_stream();
     };
 }
 

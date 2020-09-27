@@ -31,11 +31,10 @@ namespace gdk::audio
         emitter_collection_type m_Emitters;
 
     public:
-        virtual std::shared_ptr<sound> makeSound(const std::string &filePath) override;
+        
+        virtual std::shared_ptr<sound> make_sound(audio_data fileBuffer) override;
 
-        virtual std::shared_ptr<sound> makeSound(std::vector<unsigned char> fileBuffer) override;
-
-        virtual std::shared_ptr<emitter> makeEmitter(std::shared_ptr<sound> aSound) override;
+        virtual std::shared_ptr<emitter> make_emitter(std::shared_ptr<sound> aSound) override;
 
         virtual void update() override;
 

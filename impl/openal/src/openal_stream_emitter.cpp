@@ -38,14 +38,18 @@ namespace gdk::audio
                 if (processed)
                 {
                     ALuint which;
-                    alSourceUnqueueBuffers(sourceHandle, 1, &which);
+					alSourceUnqueueBuffers(sourceHandle, 1, &which);
+
                     if (m_pStream->decodeNextSamples(which))
                     {
                         alSourceQueueBuffers(sourceHandle, 1, &which);
+						std::cout << "decoding next\n";
                     }
                     else 
                     {
                         std::cout << "stream is ending!";
+
+						//alSourceStop(sourceHandle);
 
                         m_state = state::stopped;
                     }

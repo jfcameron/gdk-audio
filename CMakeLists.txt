@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
 
+project(null)
+
 #option(JFC_BUILD_DEMO "Build the demo" ON)
 #option(JFC_BUILD_DOCS "Build documentation" ON)
 #option(JFC_BUILD_TESTS "Build unit tests" ON)
@@ -23,7 +25,7 @@ jfc_project(executable #library
 
     PRIVATE_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include
         ${openal-soft_INCLUDE_DIR}
 
     LIBRARIES
@@ -33,16 +35,17 @@ jfc_project(executable #library
         "OpenAL"
 
     SOURCE_LIST
+		${CMAKE_CURRENT_SOURCE_DIR}/src/audio_data.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
-        
-        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_context.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_emitter.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_simple_emitter.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_simple_sound.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_stream.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/implementation/openal/src/openal_stream_emitter.cpp
+		
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_sound.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream_emitter.cpp
 )
 
 #[[if (JFC_BUILD_DEMO)

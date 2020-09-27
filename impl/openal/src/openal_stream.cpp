@@ -7,14 +7,9 @@
 
 namespace gdk::audio
 {
-
     std::vector<ALuint> openal_stream::getAlBufferHandles()
     {
         return {m_alBufferHandles.get().begin(), m_alBufferHandles.get().end()};
-    }
-
-    openal_stream::~openal_stream()
-    {
     }
 
     openal_stream::openal_stream(const std::string &aOggVorbisFileName) : openal_stream([&aOggVorbisFileName]()
@@ -35,7 +30,9 @@ namespace gdk::audio
             int error;
             stb_vorbis *vorbis = stb_vorbis_open_memory(&(*m_pOggVorbisFileBuffer.get())[0], m_pOggVorbisFileBuffer.get()->size(), &error, nullptr);
 
-            if (!vorbis || error != VORBIS__no_error) throw std::invalid_argument("ogg vorbis data is badly formed; could not create decoder"); //TODO: handle error enum in a more informative way. (pass along the specific error or at least decorate exception.what) 
+			//TODO: handle error enum in a more informative way. (pass along the specific error or at least decorate exception.what) 
+            if (!vorbis || error != VORBIS__no_error) 
+				throw std::invalid_argument("ogg vorbis data is badly formed; could not create decoder"); 
 
             return vorbis;
         }()
@@ -90,17 +87,73 @@ namespace gdk::audio
 
     bool openal_stream::decodeNextSamples(ALuint aOutputPCMBuffer)    
     {
-        if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get()
-            , m_VorbisInfo.channels, &m_PCMBuffer.front(), m_PCMBuffer.size()))
-        {
-            alBufferData(aOutputPCMBuffer
-                , m_Format
-                , &m_PCMBuffer.front()
-                , m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type)
-                , m_VorbisInfo.sample_rate);
+		if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(),
+			m_VorbisInfo.channels,
+			&m_PCMBuffer.front(),
+			m_PCMBuffer.size()))
+		{
+			std::cout << "hello?\n";
 
-            return true;
-        }
+			alBufferData(aOutputPCMBuffer
+				, m_Format
+				, &m_PCMBuffer.front()
+				, m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type)
+				, m_VorbisInfo.sample_rate);
+
+			//stb_vorbis_seek_start(m_pDecoder.get());
+
+			return true;
+		}
+		else
+		{
+			std::cout << "out of data\n";
+
+			stb_vorbis_seek_start(m_pDecoder.get());
+
+			//m_alBufferHandles.
+
+			// This is where the issue is!
+			m_alBufferHandles = { [&]()
+			{
+				decltype(m_alBufferHandles)::handle_type newBufferHandles;
+
+				alGenBuffers(newBufferHandles.size(), &newBufferHandles.front());
+
+				const ALenum format = [](int channelCount)
+				{
+					switch (channelCount)
+					{
+					case 1: return AL_FORMAT_MONO16;
+					case 2: return AL_FORMAT_STEREO16; // TODO: support 8s?
+					}
+
+					throw std::invalid_argument("unsupported channel count in ogg vorbis file");
+				}(m_VorbisInfo.channels);
+
+				//TODO clean this up
+				m_Format = format;
+
+				for (const auto& current_handle : newBufferHandles)
+				{
+					stb_vorbis_get_samples_short_interleaved(m_pDecoder.get()
+						, m_VorbisInfo.channels
+						, &m_PCMBuffer.front()
+						, m_PCMBuffer.size());
+
+					alBufferData(current_handle
+						, format
+						, &m_PCMBuffer.front()
+						, m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type)
+						, m_VorbisInfo.sample_rate);
+				}
+
+				return newBufferHandles;
+			}(),
+				[](const decltype(m_alBufferHandles)::handle_type a)
+			{
+				alDeleteBuffers(a.size(), &a.front());
+			}};
+		}
 
         return false;
     }

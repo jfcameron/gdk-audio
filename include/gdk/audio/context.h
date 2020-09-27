@@ -5,6 +5,7 @@
 
 #include <gdk/audio/sound.h>
 #include <gdk/audio/emitter.h>
+#include <gdk/audio/audio_data.h>
 
 #include <functional>
 #include <memory>
@@ -20,33 +21,29 @@ namespace gdk::audio
     {
     public:
         /// \brief used to specify implementation behind context::make
-        enum class implementation
-        {
-            OpenAL
-        };
+		enum class implementation
+		{
+			OpenAL
+		};
 
         /// \brief factory method, creates a context of specified implementation
         static std::unique_ptr<context> make(implementation impl);
 
         /// \brief builds a sound from a filebuffer
         /// \warn throws if the buffer does not contain encoded audio data of a type the context supports
-        virtual std::shared_ptr<sound> makeSound(sound::file_buffer_type fileBuffer) = 0;
-
-        /// \brief builds a sound from a path to a file
-        /// \warn throws if the buffer does not contain encoded audio data of a type the context supports
-        virtual std::shared_ptr<sound> makeSound(const std::string &filePath) = 0;
+        virtual std::shared_ptr<sound> make_sound(audio_data fileBuffer) = 0;
       
         /// \brief builds an emitter from a pointer to a sound
-        virtual std::shared_ptr<emitter> makeEmitter(std::shared_ptr<sound> aSound) = 0;
-
-        /// \brief list devices (headphone, speaker, ...) by name
-        //virtual std::vector<std::string> getDevices() = 0;
-
-        /// \brief change the current device by name
-        //virtual void setActiveDevice(const std::string &aDeviceName) = 0;
+        virtual std::shared_ptr<emitter> make_emitter(std::shared_ptr<sound> aSound) = 0;
 
         /// \brief loop behaviour; must be called in your update loop for gdk::audio to behave correctly
         virtual void update() = 0;
+
+		/// \brief list devices (headphone, speaker, ...) by name
+		//virtual std::vector<std::string> getDevices() = 0;
+
+		/// \brief change the current device by name
+		//virtual void setActiveDevice(const std::string &aDeviceName) = 0;
 
         /// TODO: cleanup methods? In openal case cleanup is very stateful (cannot free buffers that are "in use" (attached to a source) etc.
 
