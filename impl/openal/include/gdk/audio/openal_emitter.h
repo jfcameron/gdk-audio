@@ -18,9 +18,12 @@ namespace gdk::audio
 {
     /// \brief root emitter type for openal impl.
     /// provides a common ancestor for collections etc that do not care about
-    /// the specific differences between streamers (multi buffer, constant decoding) and simples (single buffer, 1 decode at sound ctor time)
+    /// the specific differences between streamers (multi buffer, constant decoding) and 
+	// simples (single buffer, 1 decode at sound ctor time)
     class openal_emitter : public emitter
     {
+	protected: //TODO REMOVE
+		//! 3d position of the emitter in the sound space
         jfc::shared_handle<ALuint> m_alSourceHandle;
 
     protected:
@@ -36,11 +39,10 @@ namespace gdk::audio
     public:
         openal_emitter();
 
-        bool isPlaying() override;
+        bool isPlaying() const override;
 
         virtual void update() = 0;
     };
 }
 
 #endif
-

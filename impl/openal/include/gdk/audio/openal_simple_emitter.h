@@ -4,7 +4,7 @@
 #define GDK_AUDIO_OPENAL_SIMPLE_EMITTER_H
 
 #include <gdk/audio/openal_emitter.h>
-#include <gdk/audio/openal_simple_sound.h>
+#include <gdk/audio/openal_sound.h>
 
 #include <jfc/shared_handle.h>
 
@@ -15,14 +15,24 @@
 
 namespace gdk::audio
 {
+	/// \brief emitter that entirely decodes the sound data
+	/// rather than streaming it to buffers
+	///
+	/// todo: share decoded buffers
     class openal_simple_emitter : public openal_emitter
     {
-        std::shared_ptr<openal_simple_sound> m_pSimpleStream;
+	public:
+		using sound_ptr_type = std::shared_ptr<openal_sound>;
+
+	private:
+		jfc::shared_handle<ALuint> m_ALBufferHandle;
 
     public:
-        openal_simple_emitter(std::shared_ptr<openal_simple_sound> pSimpleSound);
+        openal_simple_emitter(sound_ptr_type pSimpleSound);
 
         virtual void play() override;
+
+		virtual void stop() override;
         
         virtual void update() override;
     };

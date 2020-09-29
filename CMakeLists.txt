@@ -12,7 +12,7 @@ project(null)
 
 add_subdirectory(thirdparty)
 
-jfc_project(library #executable
+jfc_project(library
     NAME "gdkaudio"
     VERSION 0.0
     DESCRIPTION "game development kit graphics lib"
@@ -36,17 +36,15 @@ jfc_project(library #executable
         "OpenAL"
 
     SOURCE_LIST
-		${CMAKE_CURRENT_SOURCE_DIR}/src/audio_data.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
-        #${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
-		
+		#${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp # <- move to a demo exec project
+
+		${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_sound.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_sound.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream_emitter.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
 )
 
 #[[if (JFC_BUILD_DEMO)

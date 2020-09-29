@@ -5,7 +5,6 @@
 
 #include <gdk/audio/sound.h>
 #include <gdk/audio/emitter.h>
-#include <gdk/audio/audio_data.h>
 
 #include <functional>
 #include <memory>
@@ -21,10 +20,14 @@ namespace gdk::audio
     {
     public:
 		//! type returned by context factory
-		using implementation_unique_ptr_type = std::unique_ptr<context>;
+		using context_unique_ptr_type = std::unique_ptr<context>;
 
 		//!
-		using implementation_shared_ptr_type = std::shared_ptr<context>;
+		using context_shared_ptr_type = std::shared_ptr<context>;
+
+		using sound_shared_ptr_type = std::shared_ptr<sound>;
+
+		using emitter_shared_ptr_type = std::shared_ptr<emitter>;
 
         /// \brief used to specify implementation behind context::make
 		enum class implementation
@@ -33,14 +36,15 @@ namespace gdk::audio
 		};
 
         /// \brief factory method, creates a context of specified implementation
-        static implementation_unique_ptr_type make(implementation impl);
+        static context_unique_ptr_type make(implementation impl);
 
         /// \brief builds a sound from a filebuffer
         /// \warn throws if the buffer does not contain encoded audio data of a type the context supports
-        virtual std::shared_ptr<sound> make_sound(audio_data fileBuffer) = 0;
+        virtual sound_shared_ptr_type make_sound(const sound::encoding_type aEncoding,
+			sound::file_buffer_type &&aFileBuffer) = 0;
       
         /// \brief builds an emitter from a pointer to a sound
-        virtual std::shared_ptr<emitter> make_emitter(std::shared_ptr<sound> aSound) = 0;
+        virtual emitter_shared_ptr_type make_emitter(std::shared_ptr<sound> aSound) = 0;
 
 		//TODO: audio scene make
 

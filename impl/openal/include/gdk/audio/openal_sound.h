@@ -14,14 +14,24 @@
 
 namespace gdk::audio
 {
-    /// \brief common interface for all openal sound implementations
+    /// \brief data format for sound resource in openal implementation
     class openal_sound : public sound
     {
-    public:
-		//std::underlying_type<std::byte>
-        using file_buffer_type = std::vector<unsigned char>;
+	private:
+		encoding_type m_Encoding;
 
-        virtual std::vector<ALuint> getAlBufferHandles() = 0;       
+		/// \brief entire file copied to memory. can be shared between stream instances
+		file_buffer_type m_pOggVorbisFileBuffer;
+
+	public:
+		decltype(m_Encoding) getEncoding() const;
+
+		const decltype(m_pOggVorbisFileBuffer) &getData() const;
+
+
+		/// \brief construct a sound from an encoding and file buffer
+		openal_sound(decltype(m_Encoding) aEncoding,
+			const decltype(m_pOggVorbisFileBuffer) aOggVorbisData);
     };
 }
 

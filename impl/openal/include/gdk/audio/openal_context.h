@@ -32,7 +32,8 @@ namespace gdk::audio
 
     public:
         
-        virtual std::shared_ptr<sound> make_sound(audio_data fileBuffer) override;
+        virtual std::shared_ptr<sound> make_sound(const sound::encoding_type aEncoding,
+			sound::file_buffer_type&& aFileBuffer) override;
 
         virtual std::shared_ptr<emitter> make_emitter(std::shared_ptr<sound> aSound) override;
 

@@ -13,6 +13,12 @@ namespace gdk::audio
     class sound
     {
     public:
+		enum class encoding_type
+		{
+			vorbis,
+			none
+		};
+
         using file_buffer_type = std::vector<unsigned char>;
         //gettimeInSeconds
 

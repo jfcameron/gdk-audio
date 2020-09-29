@@ -12,18 +12,14 @@ namespace gdk::audio
     class emitter
     {
     public:
-        /// \brief emit the specified sound
-        //virtual void start(sound *const pSound) = 0;
-
-        /// \brief stops emitting sound
-        //virtual void stop() = 0;
-        //play(pSound) ?
+		/// \brief check if the emitter is emitting a sound
+		virtual bool isPlaying() const = 0;
 
         /// \brief begins emitting the attached sound TODO rename to emit?
         virtual void play() = 0;
 
-        /// \brief check if the emitter is emitting a sound
-        virtual bool isPlaying() = 0;
+		/// \brief stops playback
+		virtual void stop() = 0;
 
         virtual ~emitter() = default;
     };
