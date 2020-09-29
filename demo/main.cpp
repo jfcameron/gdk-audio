@@ -31,16 +31,8 @@ int main(int count, char** params)
 
 	pEmitter->play();
 
-	float i = 0;
-
 	while (pEmitter->isPlaying()) 
 	{
-		i += 0.1f;
-		
-		
-		//pEmitter->set_position({ -5, 0, 0 });
-		//pEmitter->set_position({ std::cos(i) * 100, 0, std::sin(i) * 100});
-
 		pAudio->update();
 	}
 
