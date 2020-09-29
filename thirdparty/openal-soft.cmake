@@ -15,9 +15,9 @@ set(_fileType "${CMAKE_STATIC_LIBRARY_SUFFIX}")
 #TODO: if file is not in root then if file is in debug move it to root if not then move from release to root.
 
 if (NOT EXISTS "${PROJECT_BINARY_DIR}/openal-soft/${_prefix}${_output_name}${_fileType}")
-    if (EXISTS "${PROJECT_BINARY_DIR}/openal-soft/Debug/${_prefix}${_output_name}${_fileType}")
-        file (COPY "${PROJECT_BINARY_DIR}/openal-soft/Debug/${_prefix}${_output_name}${_fileType}" "${PROJECT_BINARY_DIR}/openal-soft/${_prefix}${_output_name}${_fileType}")
-    endif()
+#    if (EXISTS "${PROJECT_BINARY_DIR}/openal-soft/Debug/${_prefix}${_output_name}${_fileType}")
+ #       file (COPY "${PROJECT_BINARY_DIR}/openal-soft/Debug/${_prefix}${_output_name}${_fileType}" "${PROJECT_BINARY_DIR}/openal-soft/${_prefix}${_output_name}${_fileType}")
+  #  endif()
     if (EXISTS "${PROJECT_BINARY_DIR}/openal-soft/Release/${_prefix}${_output_name}${_fileType}")
         file (COPY "${PROJECT_BINARY_DIR}/openal-soft/Release/${_prefix}${_output_name}${_fileType}" "${PROJECT_BINARY_DIR}/openal-soft/${_prefix}${_output_name}${_fileType}")
     endif()

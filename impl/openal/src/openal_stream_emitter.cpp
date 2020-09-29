@@ -14,6 +14,9 @@ using namespace gdk::audio;
 	, m_pDecoder({
 		[&]()
 		{
+			if (pStream->getEncoding() != sound::encoding_type::vorbis)
+				throw std::runtime_error("openal_stream_emitter currently only supports vorbis encoded data");
+
 			int error;
 
 			stb_vorbis* vorbis = stb_vorbis_open_memory(&(pStream->getData())[0],

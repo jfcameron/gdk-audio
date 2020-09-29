@@ -20,7 +20,7 @@ namespace gdk::audio
 	private:
 		encoding_type m_Encoding;
 
-		/// \brief entire file copied to memory. can be shared between stream instances
+		/// \brief audio data. refer to m_Encoding
 		file_buffer_type m_pOggVorbisFileBuffer;
 
 	public:

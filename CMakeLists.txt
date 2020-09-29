@@ -6,9 +6,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
 
 project(null)
 
-#option(JFC_BUILD_DEMO "Build the demo" ON)
-#option(JFC_BUILD_DOCS "Build documentation" ON)
-#option(JFC_BUILD_TESTS "Build unit tests" ON)
+option(JFC_BUILD_DEMO "Build the demo" ON)
+option(JFC_BUILD_DOCS "Build documentation" ON)
+option(JFC_BUILD_TESTS "Build unit tests" ON)
 
 add_subdirectory(thirdparty)
 
@@ -22,6 +22,10 @@ jfc_project(library
 
     PUBLIC_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        ${gdkmath_INCLUDE_DIRECTORIES}
+
+		${openal-soft_INCLUDE_DIR}	                     #remove when done 
+		 ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include #microphone hack
 
     PRIVATE_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
@@ -31,31 +35,31 @@ jfc_project(library
 
     LIBRARIES
         ${openal-soft_LIBRARIES}
+        ${gdkmath_LIBRARIES}
 
     DEPENDENCIES
+        "gdkmath"
         "OpenAL"
 
     SOURCE_LIST
-		#${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp # <- move to a demo exec project
-
 		${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_sound.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream_emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/src/emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
 )
 
-#[[if (JFC_BUILD_DEMO)
+if (JFC_BUILD_DEMO)
     add_subdirectory(demo)
 endif()
 
 if (JFC_BUILD_TESTS)
-    add_subdirectory(test)
+    #add_subdirectory(test)
 endif()
 
 if (JFC_BUILD_DOCS)
-    add_subdirectory(docs)
-endif()]]
-
+    #add_subdirectory(docs)
+endif()

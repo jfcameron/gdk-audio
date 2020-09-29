@@ -12,38 +12,59 @@ namespace gdk::audio
     : openal_emitter()
 	,m_ALBufferHandle([&pSimpleSound]()
 	{
-		auto pSound = std::static_pointer_cast<openal_sound>(pSimpleSound);
-
-		auto aFileBuffer = pSound->getData();
-
-		int channels, sample_rate;
-		short* data;
-		
-		auto samples = stb_vorbis_decode_memory(&aFileBuffer.front(), 
-			aFileBuffer.size(), 
-			&channels, 
-			&sample_rate, 
-			&data); //Data is in the freestore; our responsibility to clean
-		
-		if (!samples) throw std::runtime_error("could not decode the ogg vorbis file buffer");
-		
-		std::vector<short> pcmBuffer(data, data + samples);
-
-		free(data);
-
 		ALuint newALBufferHandle;
 
-		alGenBuffers(1, &newALBufferHandle);
+		switch (pSimpleSound->getEncoding())
+		{
+			case sound::encoding_type::vorbis:
+			{
+				auto pSound = std::static_pointer_cast<openal_sound>(pSimpleSound);
 
-		alBufferData(newALBufferHandle
-			, channels == 2
-				? AL_FORMAT_STEREO16
-				: channels == 1
+				auto aFileBuffer = pSound->getData();
+
+				int channels, sample_rate;
+				short* data;
+
+				auto samples = stb_vorbis_decode_memory(&aFileBuffer.front(),
+					aFileBuffer.size(),
+					&channels,
+					&sample_rate,
+					&data); //Data is in the freestore; our responsibility to clean
+
+				if (!samples) throw std::runtime_error("could not decode the ogg vorbis file buffer");
+
+				std::vector<short> pcmBuffer(data, data + samples);
+
+				free(data);
+
+				alGenBuffers(1, &newALBufferHandle);
+
+				alBufferData(newALBufferHandle
+					, channels == 2
+					? AL_FORMAT_STEREO16
+					: channels == 1
 					? AL_FORMAT_MONO16
 					: throw std::invalid_argument("unsupported channel count: " + std::to_string(channels))
-			, & pcmBuffer.front()
-			, pcmBuffer.size() * sizeof(decltype(pcmBuffer)::value_type)
-			, sample_rate);
+					, &pcmBuffer.front()
+					, pcmBuffer.size() * sizeof(decltype(pcmBuffer)::value_type)
+					, sample_rate);
+			} break;
+
+			case sound::encoding_type::none:
+			{
+				alGenBuffers(1, &newALBufferHandle);
+
+				auto data = pSimpleSound->getData();
+
+				alBufferData(newALBufferHandle
+					, AL_FORMAT_MONO16 
+					, &data.front()
+					, data.size() * sizeof(decltype(data)::value_type)
+					, 8000);
+			} break;
+
+			default: throw std::invalid_argument("simple emitter encountered unsupported encoding");
+		}
 
 		return newALBufferHandle;
 	}(),

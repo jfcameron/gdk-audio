@@ -22,11 +22,13 @@ namespace gdk::audio
 		//! type returned by context factory
 		using context_unique_ptr_type = std::unique_ptr<context>;
 
-		//!
+		//! shared ptr to a context
 		using context_shared_ptr_type = std::shared_ptr<context>;
 
+		//! shared ptr to a sound
 		using sound_shared_ptr_type = std::shared_ptr<sound>;
-
+		
+		//! shared ptr to an emitter
 		using emitter_shared_ptr_type = std::shared_ptr<emitter>;
 
         /// \brief used to specify implementation behind context::make
@@ -46,7 +48,9 @@ namespace gdk::audio
         /// \brief builds an emitter from a pointer to a sound
         virtual emitter_shared_ptr_type make_emitter(std::shared_ptr<sound> aSound) = 0;
 
-		//TODO: audio scene make
+		//TODO: make_scene
+
+		//TODO: make_listener
 
         /// \brief loop behaviour; must be called in your update loop for gdk::audio to behave correctly
         virtual void update() = 0;

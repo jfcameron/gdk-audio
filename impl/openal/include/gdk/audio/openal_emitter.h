@@ -4,7 +4,6 @@
 #define GDK_AUDIO_OPENAL_EMITTER_H
 
 #include <gdk/audio/emitter.h>
-
 #include <gdk/audio/openal_sound.h>
 
 #include <jfc/shared_handle.h>
@@ -22,7 +21,11 @@ namespace gdk::audio
 	// simples (single buffer, 1 decode at sound ctor time)
     class openal_emitter : public emitter
     {
-	protected: //TODO REMOVE
+		vector_type m_LastPosition;
+		vector_type m_Direction;
+		vector_type m_Speed;
+
+	//protected: //TODO REMOVE
 		//! 3d position of the emitter in the sound space
         jfc::shared_handle<ALuint> m_alSourceHandle;
 
@@ -37,11 +40,13 @@ namespace gdk::audio
         ALuint getSourceHandle();
 
     public:
+		virtual void set_position(const vector_type& aPosition) override;
+
         openal_emitter();
 
         bool isPlaying() const override;
 
-        virtual void update() = 0;
+        virtual void update();
     };
 }
 

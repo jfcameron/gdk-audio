@@ -45,6 +45,8 @@ namespace gdk::audio
         {
             auto context_buffer = alcCreateContext(m_pCurrentDevice.get(), 0);
 
+			alcProcessContext(context_buffer);
+
             if (!alcMakeContextCurrent(context_buffer)) 
 				throw std::runtime_error("could not make initial audio context current");
 
@@ -62,9 +64,6 @@ namespace gdk::audio
     std::shared_ptr<sound> openal_context::make_sound(const sound::encoding_type aEncoding,
 		sound::file_buffer_type&& aFileBuffer)
     {
-		if (aEncoding != sound::encoding_type::vorbis)
-			throw std::runtime_error("gdk-graphics currently only supports vorbis encoded data");
-
 		return std::shared_ptr<sound>(new openal_sound(aEncoding, aFileBuffer));
     }
 
@@ -100,6 +99,11 @@ namespace gdk::audio
 				{
 					pEmitter = std::unique_ptr<gdk::audio::openal_stream_emitter>(new openal_stream_emitter(pSound));
 				}
+			} break;
+
+			case sound::encoding_type::none:
+			{
+				pEmitter = std::unique_ptr<gdk::audio::openal_simple_emitter>(new openal_simple_emitter(pSound));
 			} break;
 
 			default: throw std::invalid_argument("tried to make an emitter using an unsupported encoding");

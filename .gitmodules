@@ -7,3 +7,6 @@
 [submodule "thirdparty/jfc-smart_handles"]
 	path = thirdparty/jfc-smart_handles
 	url = https://github.com/jfcameron/jfc-smart_handles.git
+[submodule "thirdparty/gdk-math"]
+	path = thirdparty/gdk-math
+	url = https://github.com/jfcameron/gdk-math.git
