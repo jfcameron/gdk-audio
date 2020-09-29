@@ -45,7 +45,7 @@ using namespace gdk::audio;
 				switch (channelCount)
 				{
 					case 1: return AL_FORMAT_MONO16;
-					case 2: return AL_FORMAT_STEREO16; // TODO: support 8s?
+					case 2: return AL_FORMAT_STEREO16;// TODO: support 8s?
 				}
 
 				throw std::invalid_argument("unsupported channel count in ogg vorbis file");

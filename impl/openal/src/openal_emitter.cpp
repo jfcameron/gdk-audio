@@ -34,15 +34,17 @@ namespace gdk::audio
 
 	void openal_emitter::set_position(const vector_type& a)
 	{
-		m_Speed = a - m_LastPosition;
-		m_Direction = vector_type(m_Speed).normalize();
-		m_LastPosition = a;
+		//_Speed = a - m_LastPosition;
+		//m_Direction = vector_type(m_Speed).normalize();
+		//m_LastPosition = a;
+
+
+		//alSourcef(m_alSourceHandle.get(), AL_REFERENCE_DISTANCE, 125);
+		//alSourcef(m_alSourceHandle.get(), AL_MAX_DISTANCE, 1250);
 
 		alSource3f(m_alSourceHandle.get(), AL_POSITION, a.x, a.y, a.z);
-		//alSourcef(m_alSourceHandle.get(), AL_PITCH, 0.9f);
+		alSourcef(m_alSourceHandle.get(), AL_PITCH, 1.f);
 
-		//alListener3f(AL_POSITION, 0, 0, 0);
-		//alListener3f(AL_VELOCITY, 0, 0, 0);
 	}
 
 	void openal_emitter::update()

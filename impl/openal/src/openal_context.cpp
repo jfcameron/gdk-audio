@@ -59,6 +59,8 @@ namespace gdk::audio
     {
         if (const auto error = alGetError(); error != AL_NO_ERROR) 
             throw std::runtime_error(al_error_code_to_string(error));
+
+		alDistanceModel(AL_LINEAR_DISTANCE);
     }
     
     std::shared_ptr<sound> openal_context::make_sound(const sound::encoding_type aEncoding,

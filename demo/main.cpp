@@ -6,8 +6,6 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
-#include <AL/al.h>
-#include <AL/alc.h>
 #include <ctime> 
 
 #include <iostream>
@@ -16,8 +14,6 @@
 
 #include <gdk/audio/context.h>
 #include <jfc/POL_chubby_cat_short.ogg.h>
-
-#include <gdk/audio/openal_sound.h>
 
 using namespace gdk;
 
@@ -40,8 +36,10 @@ int main(int count, char** params)
 	while (pEmitter->isPlaying()) 
 	{
 		i += 0.1f;
-		//pEmitter->set_position(std::cos(i) * 1000);
-		pEmitter->set_position({ 1000, 0, 0 });
+		
+		
+		//pEmitter->set_position({ -5, 0, 0 });
+		//pEmitter->set_position({ std::cos(i) * 100, 0, std::sin(i) * 100});
 
 		pAudio->update();
 	}

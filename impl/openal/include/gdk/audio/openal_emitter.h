@@ -19,6 +19,8 @@ namespace gdk::audio
     /// provides a common ancestor for collections etc that do not care about
     /// the specific differences between streamers (multi buffer, constant decoding) and 
 	// simples (single buffer, 1 decode at sound ctor time)
+	/// \warn in order for 3d spacial effects to be applied to the emitter, the sound provided to the emitter
+	/// MUST be mono. Stereo sounds will always be played without these effects.
     class openal_emitter : public emitter
     {
 		vector_type m_LastPosition;

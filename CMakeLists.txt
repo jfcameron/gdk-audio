@@ -24,8 +24,8 @@ jfc_project(library
         ${CMAKE_CURRENT_SOURCE_DIR}/include/
         ${gdkmath_INCLUDE_DIRECTORIES}
 
-		${openal-soft_INCLUDE_DIR}	                     #remove when done 
-		 ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include #microphone hack
+		#${openal-soft_INCLUDE_DIR}	                     #remove when done 
+		#${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include #microphone hack
 
     PRIVATE_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
