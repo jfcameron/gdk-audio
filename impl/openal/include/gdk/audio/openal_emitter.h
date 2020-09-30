@@ -44,6 +44,8 @@ namespace gdk::audio
     public:
 		virtual void set_position(const vector_type& aPosition) override;
 
+		virtual void set_pitch(const float aPitch) override;
+
         openal_emitter();
 
         bool isPlaying() const override;

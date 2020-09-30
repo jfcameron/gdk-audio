@@ -16,8 +16,12 @@ namespace gdk::audio
 		//! type used to store position of the emitter within the scene
 		using vector_type = Vector3<float>;
 
-		/// \brief change
+		/// \brief change position
+		/// \warn sound must be mono for this to have an effect
 		virtual void set_position(const vector_type& aPosition) = 0;
+
+		/// \brief set pitch 1.0f by scalar. 1.0 means no effect to the sample's pitch
+		virtual void set_pitch(const float aPitch) = 0;
 
 		/// \brief check if the emitter is emitting a sound
 		virtual bool isPlaying() const = 0;

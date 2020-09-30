@@ -32,6 +32,11 @@ namespace gdk::audio
         return m_alSourceHandle.get();
     }
 
+	void openal_emitter::set_pitch(const float aPitch)
+	{
+		alSourcef(m_alSourceHandle.get(), AL_PITCH, aPitch);
+	}
+
 	void openal_emitter::set_position(const vector_type& a)
 	{
 		//_Speed = a - m_LastPosition;
@@ -43,8 +48,6 @@ namespace gdk::audio
 		//alSourcef(m_alSourceHandle.get(), AL_MAX_DISTANCE, 1250);
 
 		alSource3f(m_alSourceHandle.get(), AL_POSITION, a.x, a.y, a.z);
-		alSourcef(m_alSourceHandle.get(), AL_PITCH, 1.f);
-
 	}
 
 	void openal_emitter::update()
