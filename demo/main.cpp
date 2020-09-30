@@ -29,12 +29,12 @@ int main(int count, char** params)
 	// create an emitter, to emit the sound
 	auto pEmitter = pAudio->make_emitter(pSound);
 
+    pEmitter->set_pitch(0.9f);
+
 	pEmitter->play();
 
-	while (pEmitter->isPlaying()) 
-	{
-		pAudio->update();
-	}
+	while (pEmitter->isPlaying()) pAudio->update();
 
 	return EXIT_SUCCESS;
 }
+

@@ -2,44 +2,45 @@
 /// \brief a microphone that writes into many buffers of fixed size
 /// useful for generating audio data to be sent over a wire
 //stream_microphone
+// ...
 
-#include <array>
 /// \brief a microphone that writes to a single buffer
 /// buffer writing begins at start_capture and ends at end_capture
 /// useful for capturing a recording to be written to disk
 class openal_simple_microphone
 {
+    /// \brief ptr to current position in the pcm buffer
     ALubyte* captureBufPtr = nullptr;
 
+    /// \brief ptr to the microphone within openal
     std::shared_ptr<ALCdevice> m_CaptureDevice = nullptr;
-    ;
+   
+    /// \brief # of samples captured from the microphone
     ALint samplesCaptured = 0;
 
+    /// \brief pcm buffer where mic data is copied to before being uploaded to an AL buffer for playback
     std::vector<ALubyte> captureBuffer;
 
     public:
     openal_simple_microphone()
         : m_CaptureDevice(std::shared_ptr<ALCdevice>([]()
-                    {
-                    auto p = alcCaptureOpenDevice(nullptr, 8000, AL_FORMAT_MONO16, 800);
+        {
+            auto p = alcCaptureOpenDevice(nullptr, 8000, AL_FORMAT_MONO16, 800);
 
-                    if (!p) throw std::runtime_error("could not open capture device");
+            if (!p) throw std::runtime_error("could not open capture device");
 
-                    return p;
-                    }(),
-                    [](ALCdevice* p)
-                    {
-                    alcCaptureCloseDevice(p);
-                    }))
+            return p;
+        }(),
+        [](ALCdevice* p)
+        {
+            alcCaptureCloseDevice(p);
+        }))
     {
         //TODO: provide an option if there are many mics
         //devices = alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
 
-        std::cout << captureBuffer.capacity() << "\n";
-
+        //TODO: obviously needs to change. Instead of preallocating, grow the vector as needed
         captureBuffer.reserve(1048576);
-
-        std::cout << captureBuffer.capacity() << "\n";
     }
 
     void start_capture()
@@ -107,7 +108,6 @@ int main(void)
     pEmitter->play();
 
     while (pEmitter->isPlaying()) {}
-
 
     return EXIT_SUCCESS;
 }
