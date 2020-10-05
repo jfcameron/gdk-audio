@@ -1,0 +1,12 @@
+[submodule "cmake/jfc-cmake"]
+	path = cmake/jfc-cmake
+	url = https://github.com/jfcameron/jfc-cmake.git
+[submodule "thirdparty/openal-soft"]
+	path = thirdparty/openal-soft
+	url = https://github.com/jfcameron/openal-soft.git
+[submodule "thirdparty/jfc-smart_handles"]
+	path = thirdparty/jfc-smart_handles
+	url = https://github.com/jfcameron/jfc-smart_handles.git
+[submodule "thirdparty/gdk-math"]
+	path = thirdparty/gdk-math
+	url = https://github.com/jfcameron/gdk-math.git
