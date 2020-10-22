@@ -11,7 +11,7 @@ jfc_project(executable
         ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 
     PRIVATE_INCLUDE_DIRECTORIES
-	    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "${gdkaudio_INCLUDE_DIRECTORIES}"
 
     LIBRARIES
@@ -19,3 +19,4 @@ jfc_project(executable
 
     DEPENDENCIES
         "gdkaudio")
+

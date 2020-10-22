@@ -4,7 +4,8 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/jfc-smart_handles")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/gdk-math")
 
 set(dependencies
-    "openal-soft"
+    "OpenAL"
 )
 
 jfc_add_dependencies(${dependencies})
+

@@ -27,25 +27,25 @@ jfc_project(library
     PRIVATE_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include
-        ${openal-soft_INCLUDE_DIR}
-		${jfc-smart_handles_INCLUDE_DIRECTORIES}
+        ${OpenAL_INCLUDE_DIR}
+        ${jfc-smart_handles_INCLUDE_DIRECTORIES}
 
     LIBRARIES
-        ${openal-soft_LIBRARIES}
+        ${OpenAL_LIBRARIES}
         ${gdkmath_LIBRARIES}
-
+    
     DEPENDENCIES
         "gdkmath"
         "OpenAL"
 
     SOURCE_LIST
-		${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_sound.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_sound.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream_emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/context.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/emitter.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/emitter.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
 )
 
@@ -60,3 +60,4 @@ endif()
 if (JFC_BUILD_DOCS)
     #add_subdirectory(docs)
 endif()
+

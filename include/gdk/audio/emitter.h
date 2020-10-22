@@ -5,7 +5,7 @@
 
 #include <functional>
 
-#include <gdk/Vector3.h>
+#include <gdk/vector3.h>
 
 namespace gdk::audio
 {

@@ -2,7 +2,7 @@
 	path = cmake/jfc-cmake
 	url = https://github.com/jfcameron/jfc-cmake.git
 [submodule "thirdparty/openal-soft"]
-	path = thirdparty/openal-soft
+	path = thirdparty/OpenAL
 	url = https://github.com/jfcameron/openal-soft.git
 [submodule "thirdparty/jfc-smart_handles"]
 	path = thirdparty/jfc-smart_handles
