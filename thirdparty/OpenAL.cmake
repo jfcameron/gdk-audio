@@ -4,6 +4,9 @@
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
     set(LIBTYPE STATIC) # var used by OpenAL to determine static/dynamic
+
+    set(ALSOFT_REQUIRE_SNDIO OFF)
+    set(ALSOFT_BACKEND_SNDIO OFF)
     
     find_package(Threads REQUIRED)
 endif()
