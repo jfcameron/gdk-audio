@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/jfcameron/gdk-audio.svg?branch=master)](https://travis-ci.org/jfcameron/gdk-audio)[![Documentation](https://img.shields.io/badge/documentation-doxygen-blue.svg)](https://jfcameron.github.io/gdk-audio/)
+[![Build Status](https://travis-ci.org/jfcameron/gdk-audio.svg?branch=master)](https://travis-ci.org/jfcameron/gdk-audio)
 
 audio library aimed at game projects. Builds for Linux and Windows.
 
