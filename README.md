@@ -1,17 +1,15 @@
-[![Build Status](https://travis-ci.org/jfcameron/gdk-audio.svg?branch=master)](https://travis-ci.org/jfcameron/gdk-audio)
-
 ## gdk-audio
 
-3D audio library aimed at game projects. Builds for Linux and Windows. Uses OpenALSoft.
+3D audio interface library for games. Besides null, implementations are libraries of their own.
+See [gdk-audio_openal](https://github.com/jfcameron/gdk-audio_openal), for the OpenAL implementation. Requires C++20.
 
-supports vorbis encoded data and raw pcm playback.
+## Building
 
-Emitters and listeners have 3d positions, effects such as doppler can be enabled.
+```
+cmake --preset linux-clang
+cmake --build --preset linux-clang
+ctest --preset linux-clang
+```
 
-## Build instructions
-Open the `.travis.yml` file on root, refer to the section for your platform
-
-## Sample project
-
-An example of a game project using this can be found here: https://github.com/jfcameron/flappy-dot
+`CMakePresets.json` lists the supported builds.
 

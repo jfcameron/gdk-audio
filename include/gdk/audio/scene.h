@@ -1,16 +1,53 @@
-// © 2019 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
-#ifndef GDK_AUDIO_OPENAL_STREAM_H
-#define GDK_AUDIO_OPENAL_STREAM_H
+#ifndef GDK_AUDIO_SCENE_H
+#define GDK_AUDIO_SCENE_H
 
-namespace gdk::audio
-{
-    /// \brief 3d space filled with listeners and emitters etc.
-    class scene
-    {
+#include <gdk/audio/types.h>
+#include <gdk/audio/emitter_group.h>
+#include <gdk/audio/insert_effect.h>
+#include <gdk/audio/listener.h>
+#include <gdk/audio/sound.h>
+
+#include <span>
+
+namespace gdk::audio {
+    /// \brief 3d space where sounds are heard.
+    /// a scene contains one listener and many emitters
+    class scene {
     public:
+        /// \brief the ears of this scene. Never null, and owned by the scene.
+        [[nodiscard]] virtual listener &get_listener() = 0;
+
+        [[nodiscard]] virtual const listener &get_listener() const = 0;
+
+        /// \brief builds an emitter for a sound and adds it to this scene
+        [[nodiscard]] virtual emitter_shared_ptr_type make_emitter(sound_shared_ptr_type aSound) = 0;
+
+        /// \brief builds an emitter whose audio passes through aInserts, in the order given
+        [[nodiscard]] virtual emitter_shared_ptr_type make_emitter(sound_shared_ptr_type aSound,
+            insert_effect_collection_type aInserts) = 0;
+
+        /// \brief builds an emitter playing a multichannel sound with each channel having a different 3d location
+        [[nodiscard]] virtual emitter_shared_ptr_type make_emitter(sound_shared_ptr_type aSound,
+            std::span<const audio_vector3_type> aChannelPositions) = 0;
+
+        /// \brief emitters of this scene that start, stop, pause and resume as one
+        /// \warning throws for an emitter that is not this scene's
+        [[nodiscard]] virtual emitter_group_shared_ptr_type make_emitter_group(
+            std::span<const emitter_shared_ptr_type> aEmitters) = 0;
+
+        /// \brief takes an emitter out of the scene, stopping it
+        virtual void remove(const emitter_shared_ptr_type &aEmitter) = 0;
+
+        /// \brief how many of this scene's emitters are still alive
+        [[nodiscard]] virtual std::size_t emitter_count() const = 0;
+
+        /// \brief must be called in your update loop for the scene to be heard correctly
+        virtual void update() = 0;
+
         virtual ~scene() = default;
     };
 }
-#endif
 
+#endif
