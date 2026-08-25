@@ -1,145 +1,137 @@
-// © 2020 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
+#include <gdk/audio/exception.h>
 #include <gdk/audio/openal_stream_emitter.h>
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
+#include <algorithm>
+#include <span>
 
-using namespace gdk::audio;
-    openal_stream_emitter::openal_stream_emitter(std::shared_ptr<openal_sound> pStream)
+namespace gdk::audio
+{
+    openal_stream_emitter::openal_stream_emitter(const sound_shared_ptr_type &apSound,
+        const openal_policy &aPolicy, insert_effect_collection_type aInserts)
     : openal_emitter()
-    , m_pSound(pStream)
-	, m_pDecoder({
-		[&]()
-		{
-			if (pStream->getEncoding() != sound::encoding_type::vorbis)
-				throw std::runtime_error("openal_stream_emitter currently only supports vorbis encoded data");
+    , m_Policy(aPolicy)
+    , m_Inserts(std::move(aInserts))
+    , m_pSound(apSound)
+    , m_pStream(apSound->open())
+    , m_BytesPerFrame(apSound->channel_count() * bytes_per_sample(apSound->format()))
+    , m_Format(al_format_from(apSound->channel_count(), apSound->format()))
+    , m_SampleRate(static_cast<ALsizei>(apSound->sample_rate()))
+    , m_alBufferHandles([&aPolicy]()
+    {
+        const auto count = std::max<std::size_t>(2, aPolicy.STREAM_BUFFER_COUNT);
 
-			int error;
+        std::vector<jfc::shared_handle<ALuint>> handles;
+        handles.reserve(count);
 
-			stb_vorbis* vorbis = stb_vorbis_open_memory(&(pStream->getData())[0],
-				pStream->getData().size(), &error, nullptr);
+        for (std::size_t i = 0; i < count; ++i) handles.emplace_back([]()
+        {
+            ALuint handle;
 
-			//TODO: handle error enum in a more informative way; pass along stb error data
-			if (!vorbis || error != VORBIS__no_error)
-				throw std::invalid_argument("ogg vorbis data is badly formed; could not create decoder");
+            alGenBuffers(1, &handle);
 
-			return vorbis;
-		}()
-		,
-		[](stb_vorbis* const p)
-		{
-			stb_vorbis_close(p);
-		}})
-	, m_VorbisInfo(stb_vorbis_get_info(m_pDecoder.get()))
-	, m_alBufferHandles([&]()
-		{
-			decltype(m_alBufferHandles)::handle_type newBufferHandles;
+            return handle;
+        }(),
+        [](const ALuint a) { alDeleteBuffers(1, &a); });
 
-			alGenBuffers(newBufferHandles.size(), &newBufferHandles.front());
+        return handles;
+    }())
+    {
+        if (!m_pStream) throw exception("a sound handed back no stream to decode");
 
-			const ALenum format = m_Format = [](int channelCount)
-			{
-				switch (channelCount)
-				{
-					case 1: return AL_FORMAT_MONO16;
-					case 2: return AL_FORMAT_STEREO16;// TODO: support 8s?
-				}
-
-				throw std::invalid_argument("unsupported channel count in ogg vorbis file");
-			}(m_VorbisInfo.channels);
-
-			return newBufferHandles;
-		}(),
-		[](const decltype(m_alBufferHandles)::handle_type a)
-		{
-			alDeleteBuffers(a.size(), &a.front());
-		})
-    {}
+        m_PCMBuffer.resize(m_Policy.STREAM_FRAMES_PER_BUFFER * m_BytesPerFrame);
+    }
 
     void openal_stream_emitter::play()
     {
-		if (m_state == state::stopped)
-		{
-			stb_vorbis_seek_start(m_pDecoder.get());
+        if (m_state != state::stopped) return;
 
-			for (size_t i(0); i < m_alBufferHandles.get().size(); ++i)
-			{
-				alSourceRewindv(m_alBufferHandles.get().size(), &m_alBufferHandles.get()[i]);
+        m_pStream->rewind();
 
-				decodeNextSamples(m_alBufferHandles.get()[i]);
+        for (const auto &pInsert : m_Inserts) pInsert->reset();
 
-				alSourceQueueBuffers(getSourceHandle(), 1, &m_alBufferHandles.get()[i]);
-			}
+        for (auto &handle : m_alBufferHandles)
+        {
+            const auto buffer = handle.get();
 
-			alSourcePlay(getSourceHandle());
-			
-			m_state = state::playing;
-		}
+            if (decode_next_samples(buffer)) alSourceQueueBuffers(source_handle(), 1, &buffer);
+        }
+
+        alSourcePlay(source_handle());
+
+        m_state = state::playing;
     }
-    
+
     void openal_stream_emitter::update()
     {
-		const auto sourceHandle = getSourceHandle();
+        const auto sourceHandle = source_handle();
 
-		ALint processed;
-		alGetSourcei(sourceHandle, AL_BUFFERS_PROCESSED, &processed);
+        ALint processed;
+        alGetSourcei(sourceHandle, AL_BUFFERS_PROCESSED, &processed);
 
-		if (processed)
-		{
-			ALuint which;
-			alSourceUnqueueBuffers(sourceHandle, 1, &which);
+        if (processed)
+        {
+            ALuint which;
+            alSourceUnqueueBuffers(sourceHandle, 1, &which);
 
-			if (m_state == state::playing)
-			if (decodeNextSamples(which))
-			{
-				alSourceQueueBuffers(sourceHandle, 1, &which);
-			}
-		}
+            if (m_state == state::playing && decode_next_samples(which))
+                alSourceQueueBuffers(sourceHandle, 1, &which);
+        }
 
-		ALint queuedBufferCount;
-		alGetSourcei(getSourceHandle(), AL_BUFFERS_QUEUED, &queuedBufferCount);
-		
-		if (!queuedBufferCount)
-		{
-			m_state = state::stopped;
-		}
-		else
-		{
-			ALint state;
-			alGetSourcei(getSourceHandle(), AL_SOURCE_STATE, &state);
+        ALint queuedBufferCount;
+        alGetSourcei(sourceHandle, AL_BUFFERS_QUEUED, &queuedBufferCount);
 
-			if (state != AL_PLAYING)
-			{
-				alSourcePlay(getSourceHandle());
-			}
-		}
+        if (!queuedBufferCount)
+        {
+            m_state = state::stopped;
+        }
+        else if (m_state == state::playing)
+        {
+            ALint state;
+            alGetSourcei(sourceHandle, AL_SOURCE_STATE, &state);
+
+            if (state != AL_PLAYING) alSourcePlay(sourceHandle);
+        }
     }
 
-	bool openal_stream_emitter::decodeNextSamples(ALuint aOutputPCMBuffer)
-	{
-		m_PCMBuffer.fill(0);
+    bool openal_stream_emitter::decode_next_samples(ALuint aOutputPCMBuffer)
+    {
+        auto frames = m_pStream->read(std::as_writable_bytes(std::span(m_PCMBuffer)));
 
-		if (int amount = stb_vorbis_get_samples_short_interleaved(m_pDecoder.get(),
-			m_VorbisInfo.channels,
-			&m_PCMBuffer.front(),
-			m_PCMBuffer.size()))
-		{
-			alBufferData(aOutputPCMBuffer
-				, m_Format
-				, &m_PCMBuffer.front()
-				, m_PCMBuffer.size() * sizeof(pcm_buffer_type::value_type)
-				, m_VorbisInfo.sample_rate);
+        if (!frames && m_Looping)
+        {
+            m_pStream->rewind();
 
-			return true;
-		}
-		
-		return false;
-	}
+            frames = m_pStream->read(std::as_writable_bytes(std::span(m_PCMBuffer)));
+        }
 
-void openal_stream_emitter::stop()
-{
-	m_state = state::stopped;
+        if (!frames) return false;
+
+        for (const auto &pInsert : m_Inserts)
+            pInsert->process(std::as_writable_bytes(std::span(m_PCMBuffer))
+                    .first(frames * m_BytesPerFrame), m_pSound->format(),
+                m_pSound->channel_count());
+
+        alBufferData(aOutputPCMBuffer, m_Format, m_PCMBuffer.data(),
+            static_cast<ALsizei>(frames * m_BytesPerFrame), m_SampleRate);
+
+        return true;
+    }
+
+    void openal_stream_emitter::stop()
+    {
+        alSourceStop(source_handle());
+
+        ALint queued;
+        alGetSourcei(source_handle(), AL_BUFFERS_QUEUED, &queued);
+
+        for (ALint i = 0; i < queued; ++i)
+        {
+            ALuint which;
+            alSourceUnqueueBuffers(source_handle(), 1, &which);
+        }
+
+        m_state = state::stopped;
+    }
 }

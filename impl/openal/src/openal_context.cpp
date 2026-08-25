@@ -1,38 +1,70 @@
-// © 2019 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
 #include <gdk/audio/openal_context.h>
+
+#include <gdk/audio/openal_microphone.h>
+#include <gdk/audio/exception.h>
 #include <gdk/audio/openal_stream_emitter.h>
 #include <gdk/audio/openal_simple_emitter.h>
-#include <gdk/audio/stb_vorbis.h>
 
 #include <iostream>
 #include <fstream>
 #include <string>
 
-static inline std::string al_error_code_to_string(ALenum aError)
-{
-	switch (aError)
-	{
-		case AL_INVALID_NAME: return "AL_INVALID_NAME"; break;
-		case AL_INVALID_ENUM: return "AL_INVALID_ENUM"; break;
-		case AL_INVALID_VALUE: return "AL_INVALID_VALUE"; break;
-		case AL_INVALID_OPERATION: return "AL_INVALID_OPERATION"; break;
-		case AL_OUT_OF_MEMORY: return "AL_OUT_OF_MEMORY"; break;
+static inline std::string al_error_code_to_string(ALenum aError) {
+	switch (aError) {
+		case AL_NO_ERROR: return "AL_NO_ERROR";
+		case AL_INVALID_NAME: return "AL_INVALID_NAME";
+		case AL_INVALID_ENUM: return "AL_INVALID_ENUM";
+		case AL_INVALID_VALUE: return "AL_INVALID_VALUE";
+		case AL_INVALID_OPERATION: return "AL_INVALID_OPERATION";
+		case AL_OUT_OF_MEMORY: return "AL_OUT_OF_MEMORY";
 	}
 
-	throw std::invalid_argument(std::to_string(aError) + " is not a valid OpenAL error code");
+	return "unrecognized OpenAL error code " + std::to_string(aError);
 }
 
-namespace gdk::audio
-{
-    openal_context::openal_context()
-    : m_pCurrentDevice({
+namespace gdk::audio {
+    namespace {
+        [[nodiscard]] ALenum al_distance_model_from(const distance_model aModel) {
+            switch (aModel) {
+                case distance_model::none: return AL_NONE;
+                case distance_model::inverse: return AL_INVERSE_DISTANCE;
+                case distance_model::inverse_clamped: return AL_INVERSE_DISTANCE_CLAMPED;
+                case distance_model::linear: return AL_LINEAR_DISTANCE;
+                case distance_model::linear_clamped: return AL_LINEAR_DISTANCE_CLAMPED;
+                case distance_model::exponent: return AL_EXPONENT_DISTANCE;
+                case distance_model::exponent_clamped: return AL_EXPONENT_DISTANCE_CLAMPED;
+            }
+
+            throw exception("unrecognized distance model");
+        }
+
+        bool aContextIsLive = false;
+    }
+
+    context_unique_ptr_type openal_context::make(openal_policy aPolicy)
+    {
+        return context_unique_ptr_type(new openal_context(std::move(aPolicy)));
+    }
+
+    openal_context::~openal_context()
+    {
+        aContextIsLive = false;
+    }
+
+    openal_context::openal_context(openal_policy aPolicy)
+    : m_Policy(std::move(aPolicy))
+    , m_pCurrentDevice({
         []()
         {
+			if (aContextIsLive) throw exception("a gdk::audio context is already live. OpenAL "
+				"makes one context current per process, so a second would silence the first");
+
 			auto device_buffer = alcOpenDevice(0); 
 
 			if (!device_buffer) 
-				throw std::runtime_error("could not initialize context on audio device");
+				throw exception("could not initialize context on audio device");
 
 			return device_buffer;
         }(),
@@ -48,7 +80,7 @@ namespace gdk::audio
 			alcProcessContext(context_buffer);
 
             if (!alcMakeContextCurrent(context_buffer)) 
-				throw std::runtime_error("could not make initial audio context current");
+				throw exception("could not make initial audio context current");
 
             return context_buffer;
         }(), 
@@ -58,79 +90,41 @@ namespace gdk::audio
         }})
     {
         if (const auto error = alGetError(); error != AL_NO_ERROR) 
-            throw std::runtime_error(al_error_code_to_string(error));
+            throw exception(al_error_code_to_string(error));
 
-		alDistanceModel(AL_LINEAR_DISTANCE);
+        aContextIsLive = true;
+
+		alDistanceModel(al_distance_model_from(m_Policy.DISTANCE_MODEL));
+		alDopplerFactor(m_Policy.DOPPLER_FACTOR);
+		alSpeedOfSound(m_Policy.SPEED_OF_SOUND);
     }
     
-    std::shared_ptr<sound> openal_context::make_sound(const sound::encoding_type aEncoding,
-		sound::file_buffer_type&& aFileBuffer)
+    std::vector<std::string> openal_context::capture_device_names() const {
+	if (!alcIsExtensionPresent(nullptr, "ALC_EXT_CAPTURE")) return {};
+
+	const auto *pAt = alcGetString(nullptr, ALC_CAPTURE_DEVICE_SPECIFIER);
+
+	if (!pAt) return {};
+
+	std::vector<std::string> out;
+
+	while (*pAt) {
+		out.emplace_back(pAt);
+
+		pAt += out.back().size() + 1;
+	}
+
+	return out;
+}
+
+microphone_shared_ptr_type openal_context::make_microphone(const microphone::request &aRequest) {
+	return std::make_shared<openal_microphone>(aRequest);
+}
+
+scene_shared_ptr_type openal_context::make_scene()
     {
-		return std::shared_ptr<sound>(new openal_sound(aEncoding, aFileBuffer));
+        return openal_scene::make(m_Policy);
     }
 
-    std::shared_ptr<emitter> openal_context::make_emitter(std::shared_ptr<sound> apSound)
-    {
-        std::shared_ptr<emitter> pEmitter;
-
-		if (auto pSound = std::dynamic_pointer_cast<openal_sound>(apSound))
-		{
-			switch (pSound->getEncoding())
-			{
-			case sound::encoding_type::vorbis:
-			{
-				std::unique_ptr<stb_vorbis, std::function<void(stb_vorbis* const)>> pDecoder({[&]()
-				{
-					int error;
-
-					stb_vorbis* vorbis = stb_vorbis_open_memory(&(pSound->getData())[0],
-						pSound->getData().size(), &error, nullptr);
-
-					if (!vorbis || error != VORBIS__no_error)
-						throw std::invalid_argument("ogg vorbis data is badly formed; could not create decoder");
-
-					return vorbis;
-				}(),
-				[](stb_vorbis* const p) { stb_vorbis_close(p); }});
-
-				if (stb_vorbis_stream_length_in_seconds(pDecoder.get()) < 5)
-				{
-					pEmitter = std::unique_ptr<gdk::audio::openal_simple_emitter>(new openal_simple_emitter(pSound));
-				}
-				else
-				{
-					pEmitter = std::unique_ptr<gdk::audio::openal_stream_emitter>(new openal_stream_emitter(pSound));
-				}
-			} break;
-
-			case sound::encoding_type::none:
-			{
-				pEmitter = std::unique_ptr<gdk::audio::openal_simple_emitter>(new openal_simple_emitter(pSound));
-			} break;
-
-			default: throw std::invalid_argument("tried to make an emitter using an unsupported encoding");
-			}
-		}
-        else throw std::invalid_argument(
-			"tried to make an emitter with a non-openal type. You cannot mix context implementations!");
-
-        m_Emitters.push_back(std::static_pointer_cast<openal_emitter>(pEmitter));
-
-        return pEmitter;
-    }
-
-    void openal_context::update()
-    {
-        for (std::remove_const<decltype(m_Emitters)::size_type>::type i(0); i < m_Emitters.size(); ++i)
-        {
-            if (m_Emitters[i].use_count() <= 1)
-            {
-                m_Emitters.erase(m_Emitters.begin() + i);
-                
-                --i;
-            }
-            else m_Emitters[i]->update();
-        }
-    }
 }
 

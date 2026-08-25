@@ -1,10 +1,11 @@
-// © 2019 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
 #ifndef GDK_AUDIO_OPENAL_CONTEXT_H
 #define GDK_AUDIO_OPENAL_CONTEXT_H
 
 #include <gdk/audio/context.h>
-#include <gdk/audio/openal_emitter.h>
+#include <gdk/audio/openal_policy.h>
+#include <gdk/audio/openal_scene.h>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -21,25 +22,30 @@ namespace gdk::audio
     public:
         using device_pointer_type = std::unique_ptr<ALCdevice, std::function<void(ALCdevice *const)>>;
         using openal_context_pointer_type = std::unique_ptr<ALCcontext, std::function<void(ALCcontext *const)>>;
-        using emitter_collection_type = std::vector<std::shared_ptr<openal_emitter>>;
 
     private:
+        openal_policy m_Policy;
+
         device_pointer_type m_pCurrentDevice;
 
         openal_context_pointer_type m_pContext;
 
-        emitter_collection_type m_Emitters;
-
     public:
-        
-        virtual std::shared_ptr<sound> make_sound(const sound::encoding_type aEncoding,
-			sound::file_buffer_type&& aFileBuffer) override;
+        /// \brief opens the default audio device and makes a context current on it
+        /// \warn throws if no device can be opened
+        [[nodiscard]] static context_unique_ptr_type make(openal_policy aPolicy = {});
 
-        virtual std::shared_ptr<emitter> make_emitter(std::shared_ptr<sound> aSound) override;
+        [[nodiscard]] virtual scene_shared_ptr_type make_scene() override;
 
-        virtual void update() override;
+        [[nodiscard]] virtual std::vector<std::string> capture_device_names() const override;
 
-        openal_context();
+        [[nodiscard]] virtual microphone_shared_ptr_type make_microphone(
+            const microphone::request &aRequest) override;
+
+        virtual ~openal_context() override;
+
+    private:
+        openal_context(openal_policy aPolicy);
     };
 }
 

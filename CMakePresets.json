@@ -1,0 +1,227 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "JFC_BUILD_TESTS": "ON",
+        "JFC_BUILD_DEMO": "OFF",
+        "JFC_BUILD_DOCS": "OFF",
+        "ALSOFT_UTILS": "OFF",
+        "ALSOFT_EXAMPLES": "OFF",
+        "ALSOFT_TESTS": "OFF",
+        "ALSOFT_INSTALL": "OFF"
+      }
+    },
+    {
+      "name": "linux-gcc",
+      "displayName": "Linux / gcc",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra"
+      }
+    },
+    {
+      "name": "linux-clang",
+      "displayName": "Linux / clang",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra"
+      }
+    },
+    {
+      "name": "linux-gcc-demo",
+      "displayName": "Linux / gcc / demo",
+      "inherits": "linux-gcc",
+      "cacheVariables": {
+        "JFC_BUILD_DEMO": "ON",
+        "JFC_BUILD_TESTS": "OFF"
+      }
+    },
+    {
+      "name": "macos-clang",
+      "displayName": "macOS / clang / libc++",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -stdlib=libc++"
+      }
+    },
+    {
+      "name": "windows-msvc",
+      "displayName": "Windows / MSVC",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "/W4 /EHsc /permissive-"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-gcc",
+      "configurePreset": "linux-gcc",
+      "targets": [
+        "gdkaudio",
+        "gdkaudio_test_0"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang",
+      "configurePreset": "linux-clang",
+      "targets": [
+        "gdkaudio",
+        "gdkaudio_test_0"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-gcc-demo",
+      "configurePreset": "linux-gcc-demo",
+      "targets": [
+        "gdkaudio-demo"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "macos-clang",
+      "configurePreset": "macos-clang",
+      "targets": [
+        "gdkaudio",
+        "gdkaudio_test_0"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "windows-msvc",
+      "configurePreset": "windows-msvc",
+      "configuration": "Release",
+      "targets": [
+        "gdkaudio",
+        "gdkaudio_test_0"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "linux-gcc",
+      "configurePreset": "linux-gcc",
+      "filter": {
+        "include": {
+          "name": "gdkaudio_test_0"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang",
+      "configurePreset": "linux-clang",
+      "filter": {
+        "include": {
+          "name": "gdkaudio_test_0"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "macos-clang",
+      "configurePreset": "macos-clang",
+      "filter": {
+        "include": {
+          "name": "gdkaudio_test_0"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "windows-msvc",
+      "configurePreset": "windows-msvc",
+      "configuration": "Release",
+      "filter": {
+        "include": {
+          "name": "gdkaudio_test_0"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ]
+}

@@ -1,70 +1,41 @@
-// © 2020 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
+#include <gdk/audio/exception.h>
 #include <gdk/audio/openal_simple_emitter.h>
-#include <gdk/audio/stb_vorbis.h>
 
-#include <string>
-#include <iostream>
+#include <vector>
+#include <span>
 
 namespace gdk::audio
 {
-    openal_simple_emitter::openal_simple_emitter(sound_ptr_type pSimpleSound)
+    openal_simple_emitter::openal_simple_emitter(const sound_shared_ptr_type &apSound,
+        const openal_policy &aPolicy)
     : openal_emitter()
-	,m_ALBufferHandle([&pSimpleSound]()
+	, m_ALBufferHandle([&apSound, &aPolicy]()
 	{
+		const auto bytesPerFrame = apSound->channel_count() * bytes_per_sample(apSound->format());
+
+		auto pStream = apSound->open();
+
+		if (!pStream) throw exception("a sound handed back no stream to decode");
+
+		std::vector<unsigned char> pcm;
+		std::vector<unsigned char> chunk(aPolicy.DECODE_FRAMES_PER_READ * bytesPerFrame);
+
+		while (const auto frames = pStream->read(std::as_writable_bytes(std::span(chunk))))
+			pcm.insert(pcm.end(), chunk.begin(), chunk.begin() + (frames * bytesPerFrame));
+
+		if (pcm.empty()) throw exception("a sound decoded to no audio at all");
+
 		ALuint newALBufferHandle;
 
-		switch (pSimpleSound->getEncoding())
-		{
-			case sound::encoding_type::vorbis:
-			{
-				auto pSound = std::static_pointer_cast<openal_sound>(pSimpleSound);
+		alGenBuffers(1, &newALBufferHandle);
 
-				auto aFileBuffer = pSound->getData();
-
-				int channels, sample_rate;
-				short* data;
-
-				auto samples = stb_vorbis_decode_memory(&aFileBuffer.front(),
-					aFileBuffer.size(),
-					&channels,
-					&sample_rate,
-					&data); //Data is in the freestore; our responsibility to clean
-
-				if (!samples) throw std::runtime_error("could not decode the ogg vorbis file buffer");
-
-				std::vector<short> pcmBuffer(data, data + samples);
-
-				free(data);
-
-				alGenBuffers(1, &newALBufferHandle);
-
-				alBufferData(newALBufferHandle
-					, channels == 2
-					? AL_FORMAT_STEREO16
-					: channels == 1
-					? AL_FORMAT_MONO16
-					: throw std::invalid_argument("unsupported channel count: " + std::to_string(channels))
-					, &pcmBuffer.front()
-					, pcmBuffer.size() * sizeof(decltype(pcmBuffer)::value_type)
-					, sample_rate);
-			} break;
-
-			case sound::encoding_type::none:
-			{
-				alGenBuffers(1, &newALBufferHandle);
-
-				auto data = pSimpleSound->getData();
-
-				alBufferData(newALBufferHandle
-					, AL_FORMAT_MONO16 
-					, &data.front()
-					, data.size() * sizeof(decltype(data)::value_type)
-					, 8000);
-			} break;
-
-			default: throw std::invalid_argument("simple emitter encountered unsupported encoding");
-		}
+		alBufferData(newALBufferHandle,
+			al_format_from(apSound->channel_count(), apSound->format()),
+			pcm.data(),
+			static_cast<ALsizei>(pcm.size()),
+			static_cast<ALsizei>(apSound->sample_rate()));
 
 		return newALBufferHandle;
 	}(),
@@ -73,27 +44,34 @@ namespace gdk::audio
 		alDeleteBuffers(1, &a);
 	})
     {}
-    
+
+    void openal_simple_emitter::set_looping(const bool aLooping)
+    {
+        openal_emitter::set_looping(aLooping);
+
+        alSourcei(source_handle(), AL_LOOPING, aLooping ? AL_TRUE : AL_FALSE);
+    }
+
     void openal_simple_emitter::play()
     {
-        const auto handle(m_ALBufferHandle.get()); //TODO: change soud tpy3e
+        const auto handle(m_ALBufferHandle.get());
 
 		alSourceRewind(handle);
 
-		alSourcei(getSourceHandle(), AL_BUFFER, handle);
+		alSourcei(source_handle(), AL_BUFFER, handle);
 
-        alSourcePlay(getSourceHandle());
+        alSourcePlay(source_handle());
 
         m_state = state::playing;
     }
-    
+
     void openal_simple_emitter::update()
     {
         switch (m_state)
         {
             case state::playing:
             {
-                const auto sourceHandle = getSourceHandle();
+                const auto sourceHandle = source_handle();
 
                 ALint processed;
                 alGetSourcei(sourceHandle, AL_BUFFERS_PROCESSED, &processed);
@@ -113,7 +91,7 @@ namespace gdk::audio
 
 	void openal_simple_emitter::stop()
 	{
-		alSourceStop(getSourceHandle());
+		alSourceStop(source_handle());
 
 		m_state = state::stopped;
 	}

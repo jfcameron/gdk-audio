@@ -1,0 +1,70 @@
+# © Joseph Cameron - All Rights Reserved
+
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.preset }} (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - preset: linux-gcc
+            runner: ubuntu-latest
+            tests: true
+
+          - preset: linux-clang
+            runner: ubuntu-latest
+            tests: true
+
+          - preset: linux-gcc
+            runner: ubuntu-24.04-arm
+            tests: true
+
+          - preset: macos-clang
+            runner: macos-latest
+            tests: true
+
+          - preset: windows-msvc
+            runner: windows-latest
+            tests: true
+
+          # Builds the demo and nothing else, so that an interface change which breaks the one
+          # worked example is caught without every other leg paying for it.
+          - preset: linux-gcc-demo
+            runner: ubuntu-latest
+            tests: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # OpenAL probes for backend headers at configure time and silently drops the ones it cannot
+      # find. The suite runs against the null backend either way, so this is not what makes the tests
+      # pass -- it is what makes the Linux legs actually compile the ALSA and PulseAudio backends
+      # rather than a library with no real backend in it.
+      - name: install audio backend headers
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libpulse-dev
+
+      - name: configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      # The null device is pinned by the test target itself, so no audio hardware is required here.
+      # Skipped on legs that build no test target, which have no test preset to run.
+      - name: test
+        if: matrix.tests
+        run: ctest --preset ${{ matrix.preset }}

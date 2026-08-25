@@ -1,0 +1,21 @@
+# © Joseph Cameron - All Rights Reserved
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/jfc-smart_handles")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/gdk-math")
+
+set(ALSOFT_BACKEND_SNDIO OFF CACHE BOOL "" FORCE)
+set(ALSOFT_REQUIRE_SNDIO OFF CACHE BOOL "" FORCE)
+
+set(HAVE_WFUNCTION_EFFECTS 0 CACHE INTERNAL "")
+
+set(ALSOFT_UTILS OFF CACHE BOOL "" FORCE)
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALSOFT_TESTS OFF CACHE BOOL "" FORCE)
+set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
+
+set(dependencies
+    "OpenAL"
+)
+
+jfc_add_dependencies(${dependencies})
+

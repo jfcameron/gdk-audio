@@ -1,4 +1,3 @@
 * text=auto
-
-thirdparty/*/ linguist-vendored
+extern/*/ linguist-vendored
 stb_vorbis.c linguist-vendored
