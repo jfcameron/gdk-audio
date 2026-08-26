@@ -12,14 +12,6 @@
 #include <vector>
 
 namespace gdk::audio {
-    struct lowpass_parameters final {
-        //! overall level, 0 to 1
-        audio_floating_point_type gain = 1.0f;
-
-        //! level of the high frequencies, 0 to 1. This is the knob that does the muffling.
-        audio_floating_point_type high_frequency_gain = 1.0f;
-    };
-
     /// \brief transforms one emitter's audio as it is decoded
     ///
     /// This is the library's extension point for audio processing
