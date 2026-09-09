@@ -32,7 +32,7 @@ namespace gdk::audio
 
     public:
         /// \brief opens the default audio device and makes a context current on it
-        /// \warn throws if no device can be opened
+        /// \warning throws if no device can be opened
         [[nodiscard]] static context_unique_ptr_type make(openal_policy aPolicy = {});
 
         [[nodiscard]] virtual scene_shared_ptr_type make_scene() override;

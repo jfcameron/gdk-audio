@@ -11,22 +11,6 @@
 
 namespace gdk::audio {
     /// \brief captures audio from an input device
-    ///
-    /// Example:
-    ///
-    /// ~~~{.cpp}
-    /// auto pMic = pContext->make_microphone({}); // system default device, default format
-    ///
-    /// pMic->start();
-    ///
-    /// // ... once a frame ...
-    /// pMic->update();
-    ///
-    /// pMic->stop();
-    ///
-    /// auto pSound = pMic->take(); // everything captured, as one sound
-    /// ~~~
-    ///
     class microphone {
     public:
         /// \brief what a caller asks a device for
@@ -55,8 +39,7 @@ namespace gdk::audio {
         [[nodiscard]] virtual std::size_t capacity_in_frames() const = 0;
 
         /// \brief begin capturing
-        ///
-        /// \warn throws if the device cannot be started. 
+        /// \warning throws if the device cannot be started. 
         virtual void start() = 0;
 
         //! stop capturing. What was captured is kept until taken.

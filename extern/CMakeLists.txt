@@ -13,9 +13,5 @@ set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ALSOFT_TESTS OFF CACHE BOOL "" FORCE)
 set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
 
-set(dependencies
-    "OpenAL"
-)
-
-jfc_add_dependencies(${dependencies})
+include("${CMAKE_CURRENT_LIST_DIR}/OpenAL.cmake")
 

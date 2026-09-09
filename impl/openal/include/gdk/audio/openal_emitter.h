@@ -20,17 +20,16 @@
 namespace gdk::audio
 {
     /// \brief the AL buffer format for a channel count and sample layout
-    /// \warn throws if OpenAL has no format for that combination
+    /// \warning throws if OpenAL has no format for that combination
     [[nodiscard]] ALenum al_format_from(const std::size_t aChannelCount, const pcm_format aFormat);
 
     /// \brief root emitter type for openal impl.
-	/// \warn in order for 3d spacial effects to be applied to the emitter, the sound provided to the emitter
+	/// \warning in order for 3d spacial effects to be applied to the emitter, the sound provided to the emitter
 	/// MUST be mono. Stereo sounds will always be played without these effects.
     class openal_emitter : public emitter {
         vector_type m_Position = vector_type::zero;
         vector_type m_Velocity = vector_type::zero;
 
-        //! zero means omnidirectional, which is what OpenAL takes a zero AL_DIRECTION to mean too
         vector_type m_Direction = vector_type::zero;
 
         audio_floating_point_type m_Gain = 1;

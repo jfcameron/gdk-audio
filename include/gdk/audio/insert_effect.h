@@ -32,7 +32,7 @@ namespace gdk::audio {
         /// \param aFormat the layout of aPCM \see sound::format
         /// \param aChannelCount 1 for mono, 2 for stereo
         ///
-        /// \warn **must not change the channel count or the frame count.** A stereo source does not
+        /// \warning **must not change the channel count or the frame count.** A stereo source does not
         /// spatialise at all, so widening the signal would silently make the emitter non-spatial.
         virtual void process(std::span<std::byte> aPCM, const pcm_format aFormat,
             const std::size_t aChannelCount) = 0;

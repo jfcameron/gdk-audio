@@ -56,14 +56,14 @@ namespace gdk::audio
     /// \brief build a sound from ogg vorbis data. The library provides this decoder
     /// as living documentation for how to integrate other decoders, and as a convenience
     /// for users who are using ogg vorbis data.
-    /// \warn throws if the data is not ogg vorbis
+    /// \warning throws if the data is not ogg vorbis
     [[nodiscard]] sound_shared_ptr_type make_vorbis_sound(const unsigned char *const aData,
         const std::size_t aSize);
 
     /// \brief build a sound from audio that is already decoded
     ///
     /// \param aFrameCount frames, not samples and not bytes
-    /// \warn throws if the description does not match the data
+    /// \warning throws if the description does not match the data
     [[nodiscard]] sound_shared_ptr_type make_pcm_sound(const void *const aData,
         const std::size_t aFrameCount, const std::size_t aChannelCount,
         const std::size_t aSampleRate, const pcm_format aFormat);

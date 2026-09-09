@@ -1,20 +1,10 @@
 # © Joseph Cameron - All Rights Reserved
 
-jfc_project(executable
-    NAME "gdkaudio-microphone-demo"
-    VERSION 1.0
-    DESCRIPTION "record from a microphone and play it back"
-    C++_STANDARD 20
-    C_STANDARD 90
+project(gdkaudio-microphone-demo)
 
-    SOURCE_LIST
-        ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+add_executable(gdkaudio-microphone-demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
-    PRIVATE_INCLUDE_DIRECTORIES
-        "${gdkaudio_INCLUDE_DIRECTORIES}"
+target_link_libraries(gdkaudio-microphone-demo PRIVATE gdkaudio)
 
-    LIBRARIES
-        "${gdkaudio_LIBRARIES}"
-
-    DEPENDENCIES
-        "gdkaudio")
+target_compile_features(gdkaudio-microphone-demo PRIVATE cxx_std_20)

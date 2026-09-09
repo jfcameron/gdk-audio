@@ -4,7 +4,9 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
 
-project(null)
+project(gdkaudio
+    VERSION 0.0
+    DESCRIPTION "game development kit graphics lib")
 
 option(JFC_BUILD_DEMO "Build the demo" ON)
 option(JFC_BUILD_DOCS "Build documentation" ON)
@@ -62,52 +64,52 @@ else()
     endforeach()
 endif()
 
-jfc_project(library
-    NAME "gdkaudio"
-    VERSION 0.0
-    DESCRIPTION "game development kit graphics lib"
-    C++_STANDARD 20
-    C_STANDARD 99
-    TYPE STATIC
+add_library(gdkaudio STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_listener.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_scene.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream_emitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/exception.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/insert_effects.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/pcm_sound.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vorbis_sound.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_microphone.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_emitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_listener.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_microphone.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_scene.cpp)
 
-    PUBLIC_INCLUDE_DIRECTORIES
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/include
-        ${OpenAL_INCLUDE_DIR}
-        ${jfc-smart_handles_INCLUDE_DIRECTORIES}
-        ${gdkmath_INCLUDE_DIRECTORIES}
+add_library(gdk::audio ALIAS gdkaudio)
 
-    PRIVATE_INCLUDE_DIRECTORIES
+set_target_properties(gdkaudio PROPERTIES EXPORT_NAME audio)
+
+set_target_properties(gdkaudio PROPERTIES PREFIX "lib")
+
+jfc_generate_cmake_header()
+
+target_include_directories(gdkaudio
+    PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/impl/null/include>"
+        "$<INSTALL_INTERFACE:include>"
+    PRIVATE
+        "${PROJECT_BINARY_DIR}/generated_include/"
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+    )
 
-    LIBRARIES
-        ${OpenAL_LIBRARIES}
-        ${gdkmath_LIBRARIES}
-    
-    DEPENDENCIES
-        "gdkmath"
-        "OpenAL"
+target_compile_features(gdkaudio PUBLIC cxx_std_20)
 
-    SOURCE_LIST
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_listener.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_scene.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream_emitter.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/exception.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/insert_effects.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/pcm_sound.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/vorbis_sound.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_microphone.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_context.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_emitter.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_listener.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_microphone.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_scene.cpp
-)
+set_property(TARGET gdkaudio PROPERTY C_STANDARD 99)
+
+target_link_libraries(gdkaudio PUBLIC
+    gdkmath
+    jfc-smart_handles
+    OpenAL)
 
 if (JFC_BUILD_DEMO)
     add_subdirectory(demo)

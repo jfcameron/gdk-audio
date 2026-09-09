@@ -36,7 +36,7 @@ namespace gdk::audio {
         virtual void set_reverb(const reverb_parameters &aParameters) = 0;
 
         /// \brief give this scene an echo, heard by every emitter in it
-        /// \warn throws if the backend has no auxiliary send available
+        /// \warning throws if the backend has no auxiliary send available
         virtual void set_echo(const echo_parameters &aParameters) = 0;
 
         /// \brief remove whatever send effect this scene

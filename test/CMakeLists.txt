@@ -6,7 +6,6 @@ jfc_add_tests(
 
     TEST_SOURCE_FILES
         "${CMAKE_CURRENT_LIST_DIR}/context_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/header_test.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/insert_effect_test.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/looping_test.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/scene_test.cpp"
@@ -17,13 +16,12 @@ jfc_add_tests(
 
     INCLUDE_DIRECTORIES
         "${CMAKE_CURRENT_LIST_DIR}"
-        "${gdkaudio_INCLUDE_DIRECTORIES}"
         "${CMAKE_CURRENT_LIST_DIR}/../src/include"
 
     LIBRARIES
-        "${gdkaudio_LIBRARIES}"
+        gdkaudio
         "${OpenAL_LIBRARIES}"
-        "${gdkmath_LIBRARIES}")
+        gdkmath)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_EXTENSIONS OFF)
 

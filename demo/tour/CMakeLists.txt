@@ -1,22 +1,14 @@
 # © Joseph Cameron - All Rights Reserved
 
-jfc_project(executable
-    NAME "gdkaudio-demo"
-    VERSION 1.0
-    DESCRIPTION "demo gdk-audio app"
-    C++_STANDARD 20
-    C_STANDARD 90
+project(gdkaudio-demo)
 
-    SOURCE_LIST
-        ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+add_executable(gdkaudio-demo
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
-    PRIVATE_INCLUDE_DIRECTORIES
-        "${CMAKE_CURRENT_SOURCE_DIR}/include"
-        "${gdkaudio_INCLUDE_DIRECTORIES}"
+target_include_directories(gdkaudio-demo PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-    LIBRARIES
-        "${gdkaudio_LIBRARIES}"
+target_link_libraries(gdkaudio-demo PRIVATE gdkaudio)
 
-    DEPENDENCIES
-        "gdkaudio")
+target_compile_features(gdkaudio-demo PRIVATE cxx_std_20)
 

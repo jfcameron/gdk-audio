@@ -9,11 +9,8 @@
 namespace gdk::audio
 {
     struct lowpass_parameters final {
-        //! overall level, 0 to 1
-        audio_floating_point_type gain = 1.0f;
-
-        //! level of the high frequencies, 0 to 1. This is the knob that does the muffling.
-        audio_floating_point_type high_frequency_gain = 1.0f;
+        audio_floating_point_type gain = 1.0f;                  ///< overall level, 0 to 1
+        audio_floating_point_type high_frequency_gain = 1.0f;   ///< level of the high frequencies, 0 to 1
     };
 
     /// \brief emits a sound at a 3d position within a scene.
@@ -25,7 +22,7 @@ namespace gdk::audio
         using vector_type = audio_vector3_type;
 
         /// \brief change position, in the scene's space
-        /// \warn a sound must be mono to be placed in space at all; a stereo sound plays flat
+        /// \warning a sound must be mono to be placed in space at all; a stereo sound plays flat
         /// wherever it is put. \see sound::channel_count
         virtual void set_position(const vector_type &aPosition) = 0;
 
@@ -65,7 +62,7 @@ namespace gdk::audio
         /// Inside the inner angle the emitter is heard at full gain, outside the outer angle at
         /// aOuterGain, and between the two it is interpolated. Both angles are the full width of the
         /// cone, not the half angle.
-        /// \warn has no effect unless a direction is set
+        /// \warning has no effect unless a direction is set
         virtual void set_cone(const audio_floating_point_type aInnerAngle,
             const audio_floating_point_type aOuterAngle,
             const audio_floating_point_type aOuterGain) = 0;
