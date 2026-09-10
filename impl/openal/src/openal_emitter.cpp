@@ -132,7 +132,7 @@ namespace gdk::audio
 
 	void openal_emitter::set_lowpass(const lowpass_parameters &aParameters)
 	{
-		if (!m_pLowpassFilter) m_pLowpassFilter.reset(new jfc::shared_handle<ALuint>([]()
+		if (!m_LowpassFilter) m_LowpassFilter.reset([]()
 		{
 			ALuint handle;
 
@@ -140,9 +140,9 @@ namespace gdk::audio
 
 			return handle;
 		}(),
-		[](const ALuint a) { alDeleteFilters(1, &a); }));
+		[](const ALuint a) { alDeleteFilters(1, &a); });
 
-		const auto filter = m_pLowpassFilter->get();
+		const auto filter = m_LowpassFilter.get();
 
 		alFilteri(filter, AL_FILTER_TYPE, AL_FILTER_LOWPASS);
 		alFilterf(filter, AL_LOWPASS_GAIN, aParameters.gain);
@@ -155,12 +155,12 @@ namespace gdk::audio
 	{
 		alSourcei(m_alSourceHandle.get(), AL_DIRECT_FILTER, AL_FILTER_NULL);
 
-		m_pLowpassFilter.reset();
+		m_LowpassFilter.reset();
 	}
 
 	ALuint openal_emitter::lowpass_filter_handle() const
 	{
-		return m_pLowpassFilter ? m_pLowpassFilter->get() : static_cast<ALuint>(AL_FILTER_NULL);
+		return m_LowpassFilter.get();   // AL_FILTER_NULL is 0x0000, and so is an empty handle
 	}
 
 	void openal_emitter::route_to_send(const ALuint aEffectSlot)

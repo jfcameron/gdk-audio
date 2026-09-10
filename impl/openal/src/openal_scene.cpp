@@ -76,7 +76,7 @@ namespace gdk::audio
 
         pEmitter->apply_listener(m_Listener);
 
-        if (m_pEffectSlot) pEmitter->route_to_send(m_pEffectSlot->get());
+        if (m_EffectSlot) pEmitter->route_to_send(m_EffectSlot.get());
 
         m_Emitters.push_back(pEmitter);
 
@@ -135,29 +135,29 @@ namespace gdk::audio
 
     void openal_scene::clear_send_effect()
     {
-        if (!m_pEffectSlot) return;
+        if (!m_EffectSlot) return;
 
         for (const auto &pEmitter : lock_and_prune(m_Emitters)) pEmitter->route_to_send(AL_EFFECTSLOT_NULL);
 
-        m_pEffectSlot.reset();
-        m_pEffect.reset();
+        m_EffectSlot.reset();
+        m_Effect.reset();
     }
 
     bool openal_scene::has_send_effect() const
     {
-        return static_cast<bool>(m_pEffectSlot);
+        return static_cast<bool>(m_EffectSlot);
     }
 
     ALuint openal_scene::effect_slot_handle() const
     {
-        return m_pEffectSlot ? m_pEffectSlot->get() : static_cast<ALuint>(AL_EFFECTSLOT_NULL);
+        return m_EffectSlot.get();   // AL_EFFECTSLOT_NULL is 0x0000, and so is an empty handle
     }
 
     ALuint openal_scene::ensure_effect(const ALenum aType)
     {
-        if (!m_pEffectSlot)
+        if (!m_EffectSlot)
         {
-            m_pEffectSlot.reset(new jfc::shared_handle<ALuint>([]()
+            m_EffectSlot.reset([]()
             {
                 ALuint handle;
 
@@ -169,12 +169,12 @@ namespace gdk::audio
 
                 return handle;
             }(),
-            [](const ALuint a) { alDeleteAuxiliaryEffectSlots(1, &a); }));
+            [](const ALuint a) { alDeleteAuxiliaryEffectSlots(1, &a); });
         }
 
-        if (!m_pEffect)
+        if (!m_Effect)
         {
-            m_pEffect.reset(new jfc::shared_handle<ALuint>([]()
+            m_Effect.reset([]()
             {
                 ALuint handle;
 
@@ -184,10 +184,10 @@ namespace gdk::audio
 
                 return handle;
             }(),
-            [](const ALuint a) { alDeleteEffects(1, &a); }));
+            [](const ALuint a) { alDeleteEffects(1, &a); });
         }
 
-        const auto effect = m_pEffect->get();
+        const auto effect = m_Effect.get();
 
         alEffecti(effect, AL_EFFECT_TYPE, aType);
 
@@ -199,11 +199,11 @@ namespace gdk::audio
 
     void openal_scene::bind_effect_to_slot()
     {
-        alAuxiliaryEffectSloti(m_pEffectSlot->get(), AL_EFFECTSLOT_EFFECT,
-            static_cast<ALint>(m_pEffect->get()));
+        alAuxiliaryEffectSloti(m_EffectSlot.get(), AL_EFFECTSLOT_EFFECT,
+            static_cast<ALint>(m_Effect.get()));
 
         for (const auto &pEmitter : lock_and_prune(m_Emitters))
-            pEmitter->route_to_send(m_pEffectSlot->get());
+            pEmitter->route_to_send(m_EffectSlot.get());
     }
 
     void openal_scene::update()

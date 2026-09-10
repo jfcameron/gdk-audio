@@ -28,8 +28,8 @@ namespace gdk::audio
         openal_listener m_Listener;
         emitter_collection_type m_Emitters;
 
-        std::unique_ptr<jfc::shared_handle<ALuint>> m_pEffect;
-        std::unique_ptr<jfc::shared_handle<ALuint>> m_pEffectSlot;
+        jfc::shared_handle<ALuint> m_Effect;
+        jfc::shared_handle<ALuint> m_EffectSlot;
 
     public:
         [[nodiscard]] static scene_shared_ptr_type make(openal_policy aPolicy = {});

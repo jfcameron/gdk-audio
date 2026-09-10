@@ -34,7 +34,7 @@ namespace gdk::audio
 
         audio_floating_point_type m_Gain = 1;
 
-        std::unique_ptr<jfc::shared_handle<ALuint>> m_pLowpassFilter;
+        jfc::shared_handle<ALuint> m_LowpassFilter;
 
         ALuint m_SendSlot = AL_EFFECTSLOT_NULL;
 
