@@ -89,7 +89,7 @@ set_target_properties(gdkaudio PROPERTIES EXPORT_NAME audio)
 
 set_target_properties(gdkaudio PROPERTIES PREFIX "lib")
 
-jfc_generate_cmake_header()
+jfc_generate_build_info()
 
 target_include_directories(gdkaudio
     PUBLIC

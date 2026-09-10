@@ -2,7 +2,6 @@
 
 jfc_add_tests(
     C++_STANDARD 20
-    C_STANDARD 99
 
     TEST_SOURCE_FILES
         "${CMAKE_CURRENT_LIST_DIR}/context_test.cpp"
@@ -23,6 +22,6 @@ jfc_add_tests(
         "${OpenAL_LIBRARIES}"
         gdkmath)
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_EXTENSIONS OFF)
+set_property(TARGET ${JFC_TEST_TARGET} PROPERTY CXX_EXTENSIONS OFF)
 
-set_tests_properties(${PROJECT_NAME} PROPERTIES ENVIRONMENT "ALSOFT_DRIVERS=null")
+set_tests_properties(${JFC_TEST_TARGET} PROPERTIES ENVIRONMENT "ALSOFT_DRIVERS=null")
