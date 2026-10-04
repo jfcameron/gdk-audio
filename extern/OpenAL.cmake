@@ -19,9 +19,9 @@ endif()
 
 message(STATUS "gdk-audio: OpenAL built from the vendored source, linked statically")
 
-if (CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    set(LIBTYPE STATIC)
+set(LIBTYPE STATIC)
 
+if (CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
     find_package(Threads REQUIRED)
 endif()
 
