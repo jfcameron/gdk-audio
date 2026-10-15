@@ -6,6 +6,8 @@
 #include <gdk/audio/types.h>
 #include <gdk/audio/send_effect.h>
 
+#include <optional>
+
 namespace gdk::audio
 {
     struct lowpass_parameters final {
@@ -22,8 +24,10 @@ namespace gdk::audio
         using vector_type = audio_vector3_type;
 
         /// \brief change position, in the scene's space
-        /// \warning a sound must be mono to be placed in space at all; a stereo sound plays flat
-        /// wherever it is put. \see sound::channel_count
+        /// \warning a sound must be mono to be placed in space at all; a stereo or multichannel
+        /// sound plays flat wherever it is put, as a speaker bed, unless it was made with a place
+        /// for each channel, which then stand about this position. \see sound::channel_count,
+        /// scene::make_emitter
         virtual void set_position(const vector_type &aPosition) = 0;
 
         [[nodiscard]] virtual vector_type position() const = 0;
@@ -91,11 +95,35 @@ namespace gdk::audio
 
         [[nodiscard]] virtual bool is_looping() const = 0;
 
-        /// \brief begins emitting the attached sound
+        /// \brief begins emitting the attached sound, from its start: the sound's stream is rewound
+        /// \see pcm_stream::rewind for a stream that cannot be
         virtual void play() = 0;
 
-        /// \brief stops playback
+        /// \brief stops playback, and lets go of whatever sound was queued but not yet heard: the
+        /// next play() starts again from the sound's start
         virtual void stop() = 0;
+
+        /// \brief stops emitting, keeping the place: resume() carries on from here, and what was
+        /// queued but not yet heard is kept and heard first. Immediate, give or take the device's
+        /// own period. Nothing if not playing.
+        virtual void pause() = 0;
+
+        /// \brief carries on from where pause() stopped. Unlike play(), never rewinds; nothing if
+        /// not paused
+        virtual void resume() = 0;
+
+        [[nodiscard]] virtual bool is_paused() const = 0;
+
+        /// \brief drops whatever has been read from the sound but not yet heard, and carries on
+        /// with what its stream hands out next, without rewinding it: for a stream whose position
+        /// has moved under it, a seek or a change of channel. Nothing if stopped.
+        virtual void discard_queued() = 0;
+
+        /// \brief how much of the sound has been heard since play(), in frames at the sound's own
+        /// rate, the device's latency counted: the frame coming out of the speakers now, as nearly
+        /// as the backend can say. A looping sound keeps counting past its end. Absent when stopped,
+        /// or when the backend cannot tell.
+        [[nodiscard]] virtual std::optional<double> playback_position() const = 0;
 
         virtual ~emitter() = default;
     };

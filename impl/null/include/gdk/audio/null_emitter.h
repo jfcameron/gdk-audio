@@ -6,6 +6,9 @@
 #include <gdk/audio/emitter.h>
 #include <gdk/audio/types.h>
 
+#include <optional>
+#include <vector>
+
 namespace gdk::audio {
     /// \brief an emitter that makes no sound and reports everything it was asked to do
     class null_emitter final : public emitter {
@@ -41,6 +44,13 @@ namespace gdk::audio {
         [[nodiscard]] virtual bool is_looping() const override;
         virtual void play() override;
         virtual void stop() override;
+        virtual void pause() override;
+        virtual void resume() override;
+        [[nodiscard]] virtual bool is_paused() const override;
+        virtual void discard_queued() override;
+
+        /// \brief absent: nothing is heard
+        [[nodiscard]] virtual std::optional<double> playback_position() const override;
 
         void finish();
 
@@ -53,6 +63,16 @@ namespace gdk::audio {
         [[nodiscard]] audio_floating_point_type reference_distance() const;
         [[nodiscard]] audio_floating_point_type max_distance() const;
         [[nodiscard]] audio_floating_point_type rolloff_factor() const;
+
+        /// \brief how many times discard_queued was called, so a caller's seek can be checked
+        [[nodiscard]] std::size_t discard_count() const;
+
+        /// \brief where each channel was placed about the emitter, when it was made with places
+        [[nodiscard]] const std::vector<vector_type> &channel_positions() const;
+
+        null_emitter() = default;
+
+        explicit null_emitter(std::vector<vector_type> aChannelPositions);
 
     private:
         vector_type mPosition{0, 0, 0};
@@ -70,9 +90,13 @@ namespace gdk::audio {
         audio_floating_point_type mMaxDistance{0};
         audio_floating_point_type mRolloffFactor{1};
 
+        std::vector<vector_type> mChannelPositions;
+
         bool mHasLowpass{false};
         bool mPlaying{false};
+        bool mPaused{false};
         bool mLooping{false};
+        std::size_t mDiscards{0};
     };
 }
 

@@ -79,7 +79,7 @@ TEST_CASE("an emitter with inserts always streams", "[insert]") {
     }
 
     SECTION("an empty chain is the same as no chain") {
-        auto pEmitter = f.pScene->make_emitter(f.sound(), {});
+        auto pEmitter = f.pScene->make_emitter(f.sound(), insert_effect_collection_type{});
 
         REQUIRE(std::dynamic_pointer_cast<openal_simple_emitter>(pEmitter) != nullptr);
     }

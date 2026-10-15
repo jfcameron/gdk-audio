@@ -1,6 +1,7 @@
 // © Joseph Cameron - All Rights Reserved
 
 #include <gdk/audio/exception.h>
+#include <gdk/audio/impl_efx.h>
 #include <gdk/audio/openal_scene.h>
 #include <gdk/audio/openal_simple_emitter.h>
 #include <gdk/audio/openal_stream_emitter.h>
@@ -32,6 +33,15 @@ namespace gdk::audio
 
             return result;
         }
+
+        [[nodiscard]] const efx_functions &efx_or_throw() {
+            const auto *const pEfx = efx();
+
+            if (!pEfx) throw exception("this openal has no effects extension (ALC_EXT_EFX), so a scene "
+                "cannot have a reverb or an echo; an insert effect, make_echo_insert, echoes without it");
+
+            return *pEfx;
+        }
     }
 
     scene_shared_ptr_type openal_scene::make(openal_policy aPolicy)
@@ -55,24 +65,39 @@ namespace gdk::audio
 
     emitter_shared_ptr_type openal_scene::make_emitter(sound_shared_ptr_type apSound)
     {
-        return make_emitter(std::move(apSound), {});
+        return add_emitter(std::move(apSound), {}, {});
     }
 
     emitter_shared_ptr_type openal_scene::make_emitter(sound_shared_ptr_type apSound,
         insert_effect_collection_type aInserts)
+    {
+        return add_emitter(std::move(apSound), std::move(aInserts), {});
+    }
+
+    emitter_shared_ptr_type openal_scene::make_emitter(sound_shared_ptr_type apSound,
+        std::span<const audio_vector3_type> aChannelPositions)
+    {
+        if (aChannelPositions.empty()) throw exception("an emitter placing a sound's channels needs a place for each");
+
+        return add_emitter(std::move(apSound), {},
+            std::vector<audio_vector3_type>(aChannelPositions.begin(), aChannelPositions.end()));
+    }
+
+    emitter_shared_ptr_type openal_scene::add_emitter(sound_shared_ptr_type apSound,
+        insert_effect_collection_type aInserts, std::vector<audio_vector3_type> aChannelOffsets)
     {
         if (!apSound) throw exception("tried to make an emitter from a null sound");
 
         for (const auto &pInsert : aInserts)
             if (!pInsert) throw exception("an insert effect in the chain was null");
 
-        const bool decodeUpFront = aInserts.empty()
+        const bool decodeUpFront = aInserts.empty() && aChannelOffsets.empty()
             && apSound->duration() < m_Policy.STREAMING_THRESHOLD_IN_SECONDS;
 
         std::shared_ptr<openal_emitter> pEmitter = decodeUpFront
             ? std::shared_ptr<openal_emitter>(new openal_simple_emitter(apSound, m_Policy))
             : std::shared_ptr<openal_emitter>(
-                new openal_stream_emitter(apSound, m_Policy, std::move(aInserts)));
+                new openal_stream_emitter(apSound, m_Policy, std::move(aInserts), std::move(aChannelOffsets)));
 
         pEmitter->apply_listener(m_Listener);
 
@@ -81,6 +106,31 @@ namespace gdk::audio
         m_Emitters.push_back(pEmitter);
 
         return pEmitter;
+    }
+
+    emitter_group_shared_ptr_type openal_scene::make_emitter_group(std::span<const emitter_shared_ptr_type> aEmitters)
+    {
+        std::vector<std::shared_ptr<openal_emitter>> members;
+
+        members.reserve(aEmitters.size());
+
+        for (const auto &pEmitter : aEmitters)
+        {
+            auto pMember = std::dynamic_pointer_cast<openal_emitter>(pEmitter);
+
+            const bool ours = pMember && std::any_of(m_Emitters.begin(), m_Emitters.end(),
+                [&pMember](const auto &aHeld) { return aHeld.lock() == pMember; });
+
+            if (!ours) throw exception("an emitter group can only be made of this scene's emitters");
+
+            members.push_back(std::move(pMember));
+        }
+
+        auto pGroup = std::make_shared<openal_emitter_group>(std::move(members));
+
+        m_Groups.push_back(pGroup);
+
+        return pGroup;
     }
 
     void openal_scene::remove(const emitter_shared_ptr_type &aEmitter)
@@ -103,32 +153,36 @@ namespace gdk::audio
 
     void openal_scene::set_reverb(const reverb_parameters &a)
     {
-        const auto effect = ensure_effect(AL_EFFECT_REVERB);
+        const auto &efx = efx_or_throw();
 
-        alEffectf(effect, AL_REVERB_DENSITY, a.density);
-        alEffectf(effect, AL_REVERB_DIFFUSION, a.diffusion);
-        alEffectf(effect, AL_REVERB_GAIN, a.gain);
-        alEffectf(effect, AL_REVERB_GAINHF, a.high_frequency_gain);
-        alEffectf(effect, AL_REVERB_DECAY_TIME, a.decay_seconds);
-        alEffectf(effect, AL_REVERB_DECAY_HFRATIO, a.decay_high_frequency_ratio);
-        alEffectf(effect, AL_REVERB_REFLECTIONS_GAIN, a.reflections_gain);
-        alEffectf(effect, AL_REVERB_REFLECTIONS_DELAY, a.reflections_delay_seconds);
-        alEffectf(effect, AL_REVERB_LATE_REVERB_GAIN, a.late_gain);
-        alEffectf(effect, AL_REVERB_LATE_REVERB_DELAY, a.late_delay_seconds);
-        alEffectf(effect, AL_REVERB_ROOM_ROLLOFF_FACTOR, a.room_rolloff_factor);
+        const auto effect = ensure_effect(EFX_EFFECT_REVERB);
+
+        efx.alEffectf(effect, EFX_REVERB_DENSITY, a.density);
+        efx.alEffectf(effect, EFX_REVERB_DIFFUSION, a.diffusion);
+        efx.alEffectf(effect, EFX_REVERB_GAIN, a.gain);
+        efx.alEffectf(effect, EFX_REVERB_GAINHF, a.high_frequency_gain);
+        efx.alEffectf(effect, EFX_REVERB_DECAY_TIME, a.decay_seconds);
+        efx.alEffectf(effect, EFX_REVERB_DECAY_HFRATIO, a.decay_high_frequency_ratio);
+        efx.alEffectf(effect, EFX_REVERB_REFLECTIONS_GAIN, a.reflections_gain);
+        efx.alEffectf(effect, EFX_REVERB_REFLECTIONS_DELAY, a.reflections_delay_seconds);
+        efx.alEffectf(effect, EFX_REVERB_LATE_REVERB_GAIN, a.late_gain);
+        efx.alEffectf(effect, EFX_REVERB_LATE_REVERB_DELAY, a.late_delay_seconds);
+        efx.alEffectf(effect, EFX_REVERB_ROOM_ROLLOFF_FACTOR, a.room_rolloff_factor);
 
         bind_effect_to_slot();
     }
 
     void openal_scene::set_echo(const echo_parameters &a)
     {
-        const auto effect = ensure_effect(AL_EFFECT_ECHO);
+        const auto &efx = efx_or_throw();
 
-        alEffectf(effect, AL_ECHO_DELAY, a.delay_seconds);
-        alEffectf(effect, AL_ECHO_LRDELAY, a.left_right_delay_seconds);
-        alEffectf(effect, AL_ECHO_DAMPING, a.damping);
-        alEffectf(effect, AL_ECHO_FEEDBACK, a.feedback);
-        alEffectf(effect, AL_ECHO_SPREAD, a.spread);
+        const auto effect = ensure_effect(EFX_EFFECT_ECHO);
+
+        efx.alEffectf(effect, EFX_ECHO_DELAY, a.delay_seconds);
+        efx.alEffectf(effect, EFX_ECHO_LRDELAY, a.left_right_delay_seconds);
+        efx.alEffectf(effect, EFX_ECHO_DAMPING, a.damping);
+        efx.alEffectf(effect, EFX_ECHO_FEEDBACK, a.feedback);
+        efx.alEffectf(effect, EFX_ECHO_SPREAD, a.spread);
 
         bind_effect_to_slot();
     }
@@ -137,7 +191,7 @@ namespace gdk::audio
     {
         if (!m_EffectSlot) return;
 
-        for (const auto &pEmitter : lock_and_prune(m_Emitters)) pEmitter->route_to_send(AL_EFFECTSLOT_NULL);
+        for (const auto &pEmitter : lock_and_prune(m_Emitters)) pEmitter->route_to_send(EFX_EFFECTSLOT_NULL);
 
         m_EffectSlot.reset();
         m_Effect.reset();
@@ -150,18 +204,20 @@ namespace gdk::audio
 
     ALuint openal_scene::effect_slot_handle() const
     {
-        return m_EffectSlot.get();   // AL_EFFECTSLOT_NULL is 0x0000, and so is an empty handle
+        return m_EffectSlot.get();   
     }
 
-    ALuint openal_scene::ensure_effect(const ALenum aType)
+    ALuint openal_scene::ensure_effect(const ALint aType)
     {
+        const auto &efx = efx_or_throw();
+
         if (!m_EffectSlot)
         {
-            m_EffectSlot.reset([]()
+            m_EffectSlot.reset([&efx]()
             {
                 ALuint handle;
 
-                alGenAuxiliaryEffectSlots(1, &handle);
+                efx.alGenAuxiliaryEffectSlots(1, &handle);
 
                 if (alGetError() != AL_NO_ERROR) throw exception(
                     "could not create an auxiliary effect slot. Slots are a scarce device resource "
@@ -169,27 +225,27 @@ namespace gdk::audio
 
                 return handle;
             }(),
-            [](const ALuint a) { alDeleteAuxiliaryEffectSlots(1, &a); });
+            [&efx](const ALuint a) { efx.alDeleteAuxiliaryEffectSlots(1, &a); });
         }
 
         if (!m_Effect)
         {
-            m_Effect.reset([]()
+            m_Effect.reset([&efx]()
             {
                 ALuint handle;
 
-                alGenEffects(1, &handle);
+                efx.alGenEffects(1, &handle);
 
                 if (alGetError() != AL_NO_ERROR) throw exception("could not create an effect");
 
                 return handle;
             }(),
-            [](const ALuint a) { alDeleteEffects(1, &a); });
+            [&efx](const ALuint a) { efx.alDeleteEffects(1, &a); });
         }
 
         const auto effect = m_Effect.get();
 
-        alEffecti(effect, AL_EFFECT_TYPE, aType);
+        efx.alEffecti(effect, EFX_EFFECT_TYPE, aType);
 
         if (alGetError() != AL_NO_ERROR) throw exception(
             "the backend does not support this effect type");
@@ -199,7 +255,7 @@ namespace gdk::audio
 
     void openal_scene::bind_effect_to_slot()
     {
-        alAuxiliaryEffectSloti(m_EffectSlot.get(), AL_EFFECTSLOT_EFFECT,
+        efx_or_throw().alAuxiliaryEffectSloti(m_EffectSlot.get(), EFX_EFFECTSLOT_EFFECT,
             static_cast<ALint>(m_Effect.get()));
 
         for (const auto &pEmitter : lock_and_prune(m_Emitters))
@@ -213,5 +269,7 @@ namespace gdk::audio
             pEmitter->apply_listener(m_Listener);
             pEmitter->update();
         }
+
+        for (const auto &pGroup : lock_and_prune(m_Groups)) pGroup->update();
     }
 }

@@ -14,7 +14,8 @@ namespace gdk::audio
     /// \brief how one sample of decoded audio is laid out
     enum class pcm_format {
         unsigned_8, //!< one unsigned byte per sample, silence at 128
-        signed_16   //!< two bytes per sample, little endian, silence at 0
+        signed_16,  //!< two bytes per sample, little endian, silence at 0
+        float_32    //!< four bytes per sample, IEEE float, -1 to 1, silence at 0. 
     };
 
     /// \brief how many bytes one sample of aFormat occupies
@@ -27,6 +28,10 @@ namespace gdk::audio
         [[nodiscard]] virtual std::size_t read(std::span<std::byte> aOut) = 0;
 
         /// \brief return the cursor to the start
+        ///
+        /// A stream of something live (a microphone, a network radio, a video's soundtrack) has
+        /// nowhere to rewind to, and may do nothing here: an emitter's play() then carries on
+        /// from where the stream is, and looping it plays whatever comes next
         virtual void rewind() = 0;
 
         virtual ~pcm_stream() = default;
@@ -35,7 +40,12 @@ namespace gdk::audio
     /// \brief a playable piece of audio: it describes itself, and opens cursors over its samples
     class sound {
     public:
-        /// \brief 1 for mono, 2 for stereo. Only a mono sound can be placed in space.
+        /// \brief 1 for mono, 2 for stereo, 4, 6, 7 or 8 for quad, 5.1, 6.1 and 7.1 in the
+        /// backend's channel order (OpenAL's: front left, front right, centre, LFE, back left, back
+        /// right, side left, side right). Only a mono sound is placed in space by a plain emitter;
+        /// the rest play as a speaker bed, each channel to the matching output, or placed a channel
+        /// at a time by scene::make_emitter's channel positions. The backend may lack the formats
+        /// past stereo; the scene says so when an emitter is made.
         [[nodiscard]] virtual std::size_t channel_count() const = 0;
 
         /// \brief frames per second

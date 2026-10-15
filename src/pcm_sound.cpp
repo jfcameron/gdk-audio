@@ -13,6 +13,7 @@ namespace gdk::audio {
         switch (aFormat) {
             case pcm_format::unsigned_8: return 1;
             case pcm_format::signed_16: return 2;
+            case pcm_format::float_32: return 4;
         }
 
         throw exception("unrecognized pcm format");

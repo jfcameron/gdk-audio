@@ -13,6 +13,7 @@
 #include <AL/alc.h>
 
 #include <memory>
+#include <optional>
 
 namespace gdk::audio
 {
@@ -20,6 +21,8 @@ namespace gdk::audio
     class openal_simple_emitter : public openal_emitter
     {
 		jfc::shared_handle<ALuint> m_ALBufferHandle;
+
+		ALsizei m_SampleRate;
 
     public:
         openal_simple_emitter(const sound_shared_ptr_type &apSound,
@@ -30,6 +33,12 @@ namespace gdk::audio
         virtual void play() override;
 
 		virtual void stop() override;
+
+		virtual void discard_queued() override;
+
+		[[nodiscard]] virtual std::optional<double> playback_position() const override;
+
+		virtual void begin_play() override;
 
         virtual void update() override;
     };

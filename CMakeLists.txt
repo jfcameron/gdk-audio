@@ -66,7 +66,9 @@ endif()
 
 add_library(gdkaudio STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_efx.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter_group.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_listener.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_scene.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp

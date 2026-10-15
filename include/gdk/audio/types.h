@@ -12,6 +12,7 @@
 namespace gdk::audio {
     class context;
     class emitter;
+    class emitter_group;
     class listener;
     class microphone;
     class scene;
@@ -26,6 +27,7 @@ namespace gdk::audio {
     using context_shared_ptr_type = std::shared_ptr<context>;
 
     using emitter_shared_ptr_type = std::shared_ptr<emitter>;
+    using emitter_group_shared_ptr_type = std::shared_ptr<emitter_group>;
     using microphone_shared_ptr_type = std::shared_ptr<microphone>;
     using scene_shared_ptr_type = std::shared_ptr<scene>;
     using sound_shared_ptr_type = std::shared_ptr<sound>;

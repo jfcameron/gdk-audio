@@ -3,6 +3,16 @@
 option(GDK_AUDIO_VENDORED_OPENAL
     "Build OpenAL Soft from the vendored source and link it statically" OFF)
 
+if (EMSCRIPTEN)
+    message(STATUS "gdk-audio: emscripten's OpenAL, over Web Audio")
+
+    add_library(OpenAL INTERFACE)
+
+    target_link_libraries(OpenAL INTERFACE openal)
+
+    return()
+endif()
+
 if (NOT GDK_AUDIO_VENDORED_OPENAL)
     find_package(OpenAL CONFIG QUIET)
 endif()

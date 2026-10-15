@@ -18,6 +18,9 @@ namespace gdk::audio
             if (aFormat == pcm_format::signed_16)
                 return static_cast<const short *>(aPCM)[aIndex] / 32768.0f;
 
+            if (aFormat == pcm_format::float_32)
+                return static_cast<const float *>(aPCM)[aIndex];
+
             return (static_cast<const unsigned char *>(aPCM)[aIndex] - 128) / 128.0f;
         }
 
@@ -29,6 +32,13 @@ namespace gdk::audio
             if (aFormat == pcm_format::signed_16)
             {
                 static_cast<short *>(aPCM)[aIndex] = static_cast<short>(clamped * 32767.0f);
+
+                return;
+            }
+
+            if (aFormat == pcm_format::float_32)
+            {
+                static_cast<float *>(aPCM)[aIndex] = clamped;
 
                 return;
             }

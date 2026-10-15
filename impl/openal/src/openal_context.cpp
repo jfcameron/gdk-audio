@@ -2,6 +2,7 @@
 
 #include <gdk/audio/openal_context.h>
 
+#include <gdk/audio/impl_efx.h>
 #include <gdk/audio/openal_microphone.h>
 #include <gdk/audio/exception.h>
 #include <gdk/audio/openal_stream_emitter.h>
@@ -50,6 +51,8 @@ namespace gdk::audio {
 
     openal_context::~openal_context()
     {
+        forget_efx();
+
         aContextIsLive = false;
     }
 
