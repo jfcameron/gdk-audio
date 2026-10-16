@@ -25,6 +25,16 @@ static inline std::string al_error_code_to_string(ALenum aError) {
 	return "unrecognized OpenAL error code " + std::to_string(aError);
 }
 
+static inline std::string alc_failure(ALCdevice *const apDevice) {
+	const auto error = alcGetError(apDevice);
+	const auto *const pError = alcGetString(apDevice, error);
+	const auto *const pName = apDevice ? alcGetString(apDevice, alcIsExtensionPresent(apDevice, "ALC_ENUMERATE_ALL_EXT")
+		? ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER) : nullptr;
+
+	return std::string(pName ? pName : "the default device") + ": "
+		+ (pError ? pError : "unrecognized ALC error code " + std::to_string(error));
+}
+
 namespace gdk::audio {
     namespace {
         [[nodiscard]] ALenum al_distance_model_from(const distance_model aModel) {
@@ -67,7 +77,7 @@ namespace gdk::audio {
 			auto device_buffer = alcOpenDevice(0); 
 
 			if (!device_buffer) 
-				throw exception("could not initialize context on audio device");
+				throw exception("could not open an audio device: " + alc_failure(nullptr));
 
 			return device_buffer;
         }(),
@@ -79,6 +89,9 @@ namespace gdk::audio {
         [this]()
         {
             auto context_buffer = alcCreateContext(m_pCurrentDevice.get(), 0);
+
+			if (!context_buffer)
+				throw exception("could not start the audio device, " + alc_failure(m_pCurrentDevice.get()));
 
 			alcProcessContext(context_buffer);
 

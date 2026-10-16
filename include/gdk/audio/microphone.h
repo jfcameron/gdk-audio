@@ -15,7 +15,7 @@ namespace gdk::audio {
     public:
         /// \brief what a caller asks a device for
         struct request final {
-            std::string device_name;
+            std::string device_name{};
 
             std::size_t sample_rate{44100};
 
