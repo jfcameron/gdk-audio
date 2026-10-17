@@ -128,6 +128,53 @@ TEST_CASE("pausing keeps the place, and resuming carries on from it", "[pause]")
         REQUIRE(pEmitter->is_playing());
     }
 
+    SECTION("a streaming emitter that ran dry just before the pause resumes all the same") {
+        auto pSound = std::make_shared<counting_sound>();
+        auto pEmitter = pScene->make_emitter(pSound);
+
+        pEmitter->play();
+        pump(pScene, 0.1f);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        pEmitter->pause();
+        pump(pScene, 0.3f);
+
+        REQUIRE(pEmitter->is_paused());
+        REQUIRE(pEmitter->playback_position());
+
+        const auto readAtResume = *pSound->pCursor;
+
+        pEmitter->resume();
+        pump(pScene, 0.3f);
+
+        REQUIRE(pEmitter->is_playing());
+        REQUIRE(*pSound->pCursor > readAtResume);
+    }
+
+    SECTION("a pause just after a buffer was heard loses none of what is queued") {
+        auto pSound = std::make_shared<counting_sound>();
+        auto pEmitter = pScene->make_emitter(pSound);
+
+        pEmitter->play();
+
+        for (int i = 0; i < 3; ++i) {
+            pump(pScene, 0.1f);
+            std::this_thread::sleep_for(std::chrono::milliseconds(150));
+
+            pEmitter->pause();
+            pump(pScene, 0.1f);
+
+            REQUIRE(pEmitter->is_paused());
+
+            pEmitter->resume();
+        }
+
+        pump(pScene, 0.3f);
+
+        REQUIRE(pEmitter->is_playing());
+    }
+
     SECTION("stop() after a pause lets everything go, and play() starts again") {
         auto pEmitter = pScene->make_emitter(make_vorbis_sound(long_tone_ogg, sizeof(long_tone_ogg)));
 

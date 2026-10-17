@@ -75,6 +75,9 @@ namespace gdk::audio
         /// \brief whether a group restarts this emitter when it runs dry, rather than update()
         [[nodiscard]] bool is_grouped() const;
 
+        /// \brief brings what is queued up to date as a pause comes
+        virtual void before_pause() {}
+
     public:
         /// \brief the underlying OpenAL source: the first, where there are several
         [[nodiscard]] ALuint source_handle() const;
@@ -156,7 +159,7 @@ namespace gdk::audio
         [[nodiscard]] bool wants_to_play() const;
 
         /// \brief a group paused this emitter's sources itself, with the others' in one call: only
-        /// the state is left to note
+        /// the state is left to note, and what is queued brought up to date
         void note_paused();
 
         /// \brief a group started this emitter's sources again itself

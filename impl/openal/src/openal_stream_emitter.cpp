@@ -170,8 +170,13 @@ namespace gdk::audio
         }
     }
 
-    void openal_stream_emitter::update()
-    {
+    void openal_stream_emitter::before_pause() {
+        refill();
+    }
+
+    void openal_stream_emitter::update() {
+        if (m_state == state::paused) return;
+
         refill();
 
         ALint queuedBufferCount;

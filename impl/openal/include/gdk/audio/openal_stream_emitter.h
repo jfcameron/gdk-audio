@@ -63,6 +63,9 @@ namespace gdk::audio
 
 		[[nodiscard]] bool is_split() const;
 
+    protected:
+        virtual void before_pause() override;
+
     public:
         openal_stream_emitter(const sound_shared_ptr_type &apSound,
             const openal_policy &aPolicy, insert_effect_collection_type aInserts = {},

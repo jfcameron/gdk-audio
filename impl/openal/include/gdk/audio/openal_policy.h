@@ -38,7 +38,7 @@ namespace gdk::audio {
         const std::size_t STREAM_FRAMES_PER_BUFFER{4096};
 
         /// \brief how many buffers a streaming emitter cycles through. Two is the minimum that lets
-        /// one play while the next is filled.
+        /// one play while the next is filled. 
         const std::size_t STREAM_BUFFER_COUNT{2};
 
         /// \brief how much audio is pulled per read while decoding a sound up front

@@ -104,6 +104,8 @@ namespace gdk::audio
     {
         if (m_state != state::playing) return;
 
+        before_pause();
+
         pause_sources();
 
         m_state = state::paused;
@@ -178,7 +180,11 @@ namespace gdk::audio
 
     void openal_emitter::note_paused()
     {
-        if (m_state == state::playing) m_state = state::paused;
+        if (m_state != state::playing) return;
+
+        before_pause();
+
+        m_state = state::paused;
     }
 
     void openal_emitter::note_resumed()
