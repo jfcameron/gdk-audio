@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstring>
 #include <memory>
+#include <span>
 #include <vector>
 
 namespace gdk::audio {
@@ -102,6 +103,43 @@ namespace gdk::audio {
         return sound_shared_ptr_type(new pcm_sound(
             std::vector<unsigned char>(first, first + (aData ? bytes : 0)),
             aFrameCount, aChannelCount, aSampleRate, aFormat));
+    }
+
+    sound_shared_ptr_type make_pcm_sound(const sound &aSound) {
+        const auto channels = aSound.channel_count();
+        const auto rate = aSound.sample_rate();
+        const auto format = aSound.format();
+
+        if (!channels) throw exception("a sound with no channels cannot be played");
+        if (!rate) throw exception("a sound with no sample rate cannot be played");
+
+        const auto bytesPerFrame = channels * bytes_per_sample(format);
+
+        auto pStream = aSound.open();
+
+        if (!pStream) throw exception("a sound handed back no stream to decode");
+
+        const auto chunk = rate * bytesPerFrame;
+
+        std::vector<unsigned char> out;
+
+        std::size_t frames = 0;
+
+        for (;;) {
+            out.resize((frames * bytesPerFrame) + chunk);
+
+            const auto read = pStream->read(std::as_writable_bytes(
+                std::span(out.data() + (frames * bytesPerFrame), chunk)));
+
+            if (!read) break;
+
+            frames += read;
+        }
+
+        out.resize(frames * bytesPerFrame);
+        out.shrink_to_fit();
+
+        return sound_shared_ptr_type(new pcm_sound(std::move(out), frames, channels, rate, format));
     }
 }
 

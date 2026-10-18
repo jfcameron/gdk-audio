@@ -12,12 +12,12 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
-#include "data/long_tone_ogg.h"
-#include "data/short_tone_ogg.h"
-#include "data/stereo_tone_ogg.h"
+#include "tones.h"
 
 #include <AL/al.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <span>
@@ -26,11 +26,6 @@ using namespace gdk;
 using namespace gdk::audio;
 
 namespace {
-    [[nodiscard]] sound_shared_ptr_type sound_from(const unsigned char *const aData,
-        const std::size_t aSize) {
-        return make_vorbis_sound(aData, aSize);
-    }
-
     [[nodiscard]] context_unique_ptr_type make_context() {
         return openal_context::make();
     }
@@ -57,77 +52,35 @@ TEST_CASE("the refusal is about overlap, not about counting", "[context]") {
     }
 }
 
-TEST_CASE("make_sound", "[context][sound]") {
-    auto pContext = make_context();
-
-    SECTION("a well formed vorbis buffer yields a sound") {
-        REQUIRE(sound_from(short_tone_ogg, sizeof(short_tone_ogg)) != nullptr);
-    }
-
-    SECTION("a malformed buffer is refused") {
-        const std::vector<unsigned char> garbage(64, 0x7f);
-
-        REQUIRE_THROWS_AS(sound_from(garbage.data(), garbage.size()), exception);
-    }
-
-    SECTION("an empty buffer is refused") {
-        REQUIRE_THROWS_AS(sound_from(short_tone_ogg, 0), exception);
-    }
-
-    SECTION("a null pointer is refused rather than dereferenced") {
-        REQUIRE_THROWS_AS(sound_from(nullptr, 0), exception);
-    }
-
-    SECTION("a null pointer with a nonzero length is refused too") {
-        REQUIRE_THROWS_AS(sound_from(nullptr, 1024), exception);
-    }
-
-    SECTION("a length shorter than the data truncates rather than overruns") {
-        REQUIRE_THROWS_AS(sound_from(short_tone_ogg, 8), exception);
-    }
-
-    SECTION("truncated vorbis is refused") {
-        REQUIRE_THROWS_AS(sound_from(short_tone_ogg, sizeof(short_tone_ogg) / 4),
-            exception);
-    }
-}
-
 TEST_CASE("a sound describes itself", "[context][sound]") {
     auto pContext = make_context();
 
     SECTION("a mono clip reports one channel") {
-        auto pSound = sound_from(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pSound = short_tone();
 
         REQUIRE(pSound->channel_count() == 1);
     }
 
     SECTION("a stereo clip reports two channels") {
-        auto pSound = sound_from(stereo_tone_ogg, sizeof(stereo_tone_ogg));
+        auto pSound = stereo_tone();
 
         REQUIRE(pSound->channel_count() == 2);
     }
 
-    SECTION("duration matches the clips the fixtures were generated at") {
-        auto pShort = sound_from(short_tone_ogg, sizeof(short_tone_ogg));
-        auto pLong = sound_from(long_tone_ogg, sizeof(long_tone_ogg));
+    SECTION("duration matches the clips the fixtures were made at") {
+        auto pShort = short_tone();
+        auto pLong = long_tone();
 
-        REQUIRE(pShort->duration() == Approx(1.0f).margin(0.05));
-        REQUIRE(pLong->duration() == Approx(6.0f).margin(0.05));
+        REQUIRE(pShort->duration() == Approx(1.0f).margin(0.001));
+        REQUIRE(pLong->duration() == Approx(6.0f).margin(0.001));
     }
 
     SECTION("the fixtures straddle the streaming threshold") {
-        auto pShort = sound_from(short_tone_ogg, sizeof(short_tone_ogg));
-        auto pLong = sound_from(long_tone_ogg, sizeof(long_tone_ogg));
+        auto pShort = short_tone();
+        auto pLong = long_tone();
 
         REQUIRE(pShort->duration() < 5.0f);
         REQUIRE(pLong->duration() > 5.0f);
-    }
-
-    SECTION("vorbis reports the layout it decodes to") {
-        auto pSound = sound_from(short_tone_ogg, sizeof(short_tone_ogg));
-
-        REQUIRE(pSound->format() == pcm_format::signed_16);
-        REQUIRE(pSound->sample_rate() == 8000);
     }
 }
 
@@ -200,6 +153,89 @@ TEST_CASE("a sound over already decoded audio", "[sound]") {
     }
 }
 
+namespace {
+    class counting_sound final : public sound {
+    public:
+        static constexpr std::size_t RATE = 8000;
+        static constexpr std::size_t FRAMES = 1000;
+
+        mutable std::size_t opened = 0;
+
+        [[nodiscard]] std::size_t channel_count() const override { return 2; }
+        [[nodiscard]] std::size_t sample_rate() const override { return RATE; }
+        [[nodiscard]] pcm_format format() const override { return pcm_format::signed_16; }
+
+        [[nodiscard]] audio_floating_point_type duration() const override {
+            return static_cast<audio_floating_point_type>(FRAMES) / RATE;
+        }
+
+        [[nodiscard]] std::unique_ptr<pcm_stream> open() const override {
+            ++opened;
+
+            return std::unique_ptr<pcm_stream>(new ramp());
+        }
+
+    private:
+        class ramp final : public pcm_stream {
+            std::size_t m_Cursor = 0;
+
+        public:
+            std::size_t read(std::span<std::byte> aOut) override {
+                const auto frames = std::min({aOut.size() / (2 * sizeof(std::int16_t)), FRAMES - m_Cursor, std::size_t{3}});
+                auto *const out = reinterpret_cast<std::int16_t *>(aOut.data());
+
+                for (std::size_t i = 0; i < frames; ++i) {
+                    out[i * 2] = static_cast<std::int16_t>(m_Cursor + i);
+                    out[i * 2 + 1] = static_cast<std::int16_t>(-static_cast<int>(m_Cursor + i));
+                }
+
+                m_Cursor += frames;
+
+                return frames;
+            }
+
+            void rewind() override { m_Cursor = 0; }
+        };
+    };
+}
+
+TEST_CASE("any sound decoded now is a sound over its decoded audio", "[sound]") {
+    const counting_sound original;
+
+    const auto pDecoded = make_pcm_sound(original);
+
+    SECTION("its layout and every frame, read through one stream") {
+        REQUIRE(original.opened == 1);
+
+        REQUIRE(pDecoded->channel_count() == 2);
+        REQUIRE(pDecoded->sample_rate() == counting_sound::RATE);
+        REQUIRE(pDecoded->format() == pcm_format::signed_16);
+        REQUIRE(pDecoded->duration() == Approx(original.duration()));
+
+        std::vector<std::int16_t> out(counting_sound::FRAMES * 2 + 8);
+
+        auto pStream = pDecoded->open();
+
+        REQUIRE(pStream->read(std::as_writable_bytes(std::span(out))) == counting_sound::FRAMES);
+
+        for (std::size_t frame = 0; frame < counting_sound::FRAMES; ++frame) {
+            INFO("frame " << frame);
+
+            REQUIRE(out[frame * 2] == static_cast<std::int16_t>(frame));
+            REQUIRE(out[frame * 2 + 1] == static_cast<std::int16_t>(-static_cast<int>(frame)));
+        }
+    }
+
+    SECTION("emitters made for it never open the original again") {
+        auto pContext = make_context();
+        auto pScene = pContext->make_scene();
+
+        for (int each = 0; each < 3; ++each) pScene->make_emitter(pDecoded)->play();
+
+        REQUIRE(original.opened == 1);
+    }
+}
+
 TEST_CASE("make_scene", "[context][scene]") {
     auto pContext = make_context();
 
@@ -257,7 +293,7 @@ TEST_CASE("the context policy is honoured", "[context][policy]") {
 
         auto pScene = pContext->make_scene();
 
-        auto pEmitter = pScene->make_emitter(sound_from(short_tone_ogg, sizeof(short_tone_ogg)));
+        auto pEmitter = pScene->make_emitter(short_tone());
 
         REQUIRE(std::dynamic_pointer_cast<openal_stream_emitter>(pEmitter) != nullptr);
     }
@@ -270,7 +306,7 @@ TEST_CASE("the context policy is honoured", "[context][policy]") {
 
         auto pScene = pContext->make_scene();
 
-        auto pEmitter = pScene->make_emitter(sound_from(long_tone_ogg, sizeof(long_tone_ogg)));
+        auto pEmitter = pScene->make_emitter(long_tone());
 
         REQUIRE(std::dynamic_pointer_cast<openal_simple_emitter>(pEmitter) != nullptr);
     }

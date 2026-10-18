@@ -11,7 +11,7 @@
 #include <gdk/audio/send_effect.h>
 #include <gdk/audio/sound.h>
 
-#include "data/short_tone_ogg.h"
+#include "tones.h"
 
 #define AL_ALEXT_PROTOTYPES
 #include <AL/al.h>
@@ -28,7 +28,7 @@ namespace {
         scene_shared_ptr_type pScene = pContext->make_scene();
 
         [[nodiscard]] emitter_shared_ptr_type emitter() const {
-            return pScene->make_emitter(make_vorbis_sound(short_tone_ogg, sizeof(short_tone_ogg)));
+            return pScene->make_emitter(short_tone());
         }
 
         [[nodiscard]] ALuint slot() const {

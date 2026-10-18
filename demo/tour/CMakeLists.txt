@@ -8,7 +8,7 @@ add_executable(gdkaudio-demo
 target_include_directories(gdkaudio-demo PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-target_link_libraries(gdkaudio-demo PRIVATE gdkaudio)
+target_link_libraries(gdkaudio-demo PRIVATE gdkaudio gdkaudio_vorbis)
 
 target_compile_features(gdkaudio-demo PRIVATE cxx_std_20)
 

@@ -11,7 +11,7 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
-#include "data/tiny_tone_ogg.h"
+#include "tones.h"
 
 #include <AL/al.h>
 
@@ -24,7 +24,7 @@ using namespace gdk::audio;
 
 namespace {
     [[nodiscard]] sound_shared_ptr_type tiny() {
-        return make_vorbis_sound(tiny_tone_ogg, sizeof(tiny_tone_ogg));
+        return tiny_tone();
     }
 
     [[nodiscard]] ALint al_looping_of(const emitter_shared_ptr_type &aEmitter) {

@@ -76,8 +76,6 @@ add_library(gdkaudio STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/exception.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/insert_effects.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pcm_sound.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/vorbis_sound.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/stb_vorbis.c
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_microphone.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_emitter.cpp
@@ -112,6 +110,23 @@ target_link_libraries(gdkaudio PUBLIC
     gdkmath
     jfc-smart_handles
     OpenAL)
+
+add_library(gdkaudio_vorbis STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ext/vorbis_sound.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ext/stb_vorbis.c)
+
+add_library(gdk::audio_vorbis ALIAS gdkaudio_vorbis)
+
+set_target_properties(gdkaudio_vorbis PROPERTIES EXPORT_NAME audio_vorbis)
+
+set_target_properties(gdkaudio_vorbis PROPERTIES PREFIX "lib")
+
+target_link_libraries(gdkaudio_vorbis PUBLIC
+    gdkaudio)
+
+target_compile_features(gdkaudio_vorbis PUBLIC cxx_std_20)
+
+set_property(TARGET gdkaudio_vorbis PROPERTY C_STANDARD 99)
 
 if (JFC_BUILD_DEMO)
     add_subdirectory(demo)

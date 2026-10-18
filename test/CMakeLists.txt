@@ -29,3 +29,21 @@ jfc_add_tests(
 set_property(TARGET ${JFC_TEST_TARGET} PROPERTY CXX_EXTENSIONS OFF)
 
 set_tests_properties(${JFC_TEST_TARGET} PROPERTIES ENVIRONMENT "ALSOFT_DRIVERS=null")
+
+jfc_add_tests(
+    C++_STANDARD 20
+
+    TEST_SOURCE_FILES
+        "${CMAKE_CURRENT_LIST_DIR}/ext/vorbis_test.cpp"
+
+    INCLUDE_DIRECTORIES
+        "${CMAKE_CURRENT_LIST_DIR}"
+
+    LIBRARIES
+        gdkaudio_vorbis
+        "${OpenAL_LIBRARIES}"
+        gdkmath)
+
+set_property(TARGET ${JFC_TEST_TARGET} PROPERTY CXX_EXTENSIONS OFF)
+
+set_tests_properties(${JFC_TEST_TARGET} PROPERTIES ENVIRONMENT "ALSOFT_DRIVERS=null")

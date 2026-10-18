@@ -11,7 +11,7 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
-#include "data/long_tone_ogg.h"
+#include "tones.h"
 
 #include <array>
 #include <chrono>
@@ -42,7 +42,7 @@ TEST_CASE("emitters in a group start, stop, pause and resume as one", "[group]")
     auto pContext = openal_context::make(STREAMING);
     auto pScene = pContext->make_scene();
 
-    auto pSound = make_vorbis_sound(long_tone_ogg, sizeof(long_tone_ogg));
+    auto pSound = long_tone();
 
     const std::array<emitter_shared_ptr_type, 3> members{
         pScene->make_emitter(pSound), pScene->make_emitter(pSound), pScene->make_emitter(pSound)};

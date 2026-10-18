@@ -8,8 +8,7 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
-#include "data/long_tone_ogg.h"
-#include "data/short_tone_ogg.h"
+#include "tones.h"
 
 #include <chrono>
 #include <cstddef>
@@ -84,7 +83,7 @@ TEST_CASE("pausing keeps the place, and resuming carries on from it", "[pause]")
     auto pScene = pContext->make_scene();
 
     SECTION("a decoded emitter") {
-        auto pEmitter = pScene->make_emitter(make_vorbis_sound(short_tone_ogg, sizeof(short_tone_ogg)));
+        auto pEmitter = pScene->make_emitter(short_tone());
 
         REQUIRE_FALSE(pEmitter->is_paused());
 
@@ -176,7 +175,7 @@ TEST_CASE("pausing keeps the place, and resuming carries on from it", "[pause]")
     }
 
     SECTION("stop() after a pause lets everything go, and play() starts again") {
-        auto pEmitter = pScene->make_emitter(make_vorbis_sound(long_tone_ogg, sizeof(long_tone_ogg)));
+        auto pEmitter = pScene->make_emitter(long_tone());
 
         pEmitter->play();
         pEmitter->pause();

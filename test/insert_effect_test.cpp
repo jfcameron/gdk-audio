@@ -11,7 +11,7 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
-#include "data/short_tone_ogg.h"
+#include "tones.h"
 
 #include <algorithm>
 #include <memory>
@@ -58,7 +58,7 @@ namespace {
         scene_shared_ptr_type pScene = pContext->make_scene();
 
         [[nodiscard]] sound_shared_ptr_type sound() const {
-            return make_vorbis_sound(short_tone_ogg, sizeof(short_tone_ogg));
+            return short_tone();
         }
     };
 }

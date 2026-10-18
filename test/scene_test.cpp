@@ -10,8 +10,7 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
-#include "data/long_tone_ogg.h"
-#include "data/short_tone_ogg.h"
+#include "tones.h"
 
 #include <gdk/math_constants.h>
 
@@ -26,18 +25,12 @@ using namespace gdk;
 using namespace gdk::audio;
 
 namespace {
-    [[nodiscard]] sound_shared_ptr_type sound_from(const unsigned char *const aData,
-        const std::size_t aSize) {
-        return make_vorbis_sound(aData, aSize);
-    }
-
     struct fixture final {
         context_unique_ptr_type pContext = openal_context::make();
         scene_shared_ptr_type pScene = pContext->make_scene();
 
-        [[nodiscard]] emitter_shared_ptr_type emitter_for(const unsigned char *const aData,
-            const std::size_t aSize) {
-            return pScene->make_emitter(sound_from(aData, aSize));
+        [[nodiscard]] emitter_shared_ptr_type emitter_for(const sound_shared_ptr_type &apSound) {
+            return pScene->make_emitter(apSound);
         }
     };
 
@@ -103,7 +96,7 @@ TEST_CASE("the scene refers to its emitters weakly", "[scene][emitter]") {
     fixture f;
 
     SECTION("making one adds it, and adds no reference to it") {
-        auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pEmitter = f.emitter_for(short_tone());
 
         REQUIRE(f.pScene->emitter_count() == 1);
         REQUIRE(pEmitter.use_count() == 1);
@@ -113,7 +106,7 @@ TEST_CASE("the scene refers to its emitters weakly", "[scene][emitter]") {
         std::weak_ptr<emitter> weak;
 
         {
-            auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+            auto pEmitter = f.emitter_for(short_tone());
             weak = pEmitter;
             pEmitter->play();
 
@@ -125,7 +118,7 @@ TEST_CASE("the scene refers to its emitters weakly", "[scene][emitter]") {
 
     SECTION("the scene stops reporting an emitter nobody holds") {
         {
-            auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+            auto pEmitter = f.emitter_for(short_tone());
 
             REQUIRE(f.pScene->emitter_count() == 1);
         }
@@ -135,7 +128,7 @@ TEST_CASE("the scene refers to its emitters weakly", "[scene][emitter]") {
 
     SECTION("update sweeps the expired entries away") {
         {
-            auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+            auto pEmitter = f.emitter_for(short_tone());
         }
 
         REQUIRE_NOTHROW(f.pScene->update());
@@ -143,7 +136,7 @@ TEST_CASE("the scene refers to its emitters weakly", "[scene][emitter]") {
     }
 
     SECTION("remove silences an emitter the caller still holds") {
-        auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pEmitter = f.emitter_for(short_tone());
         pEmitter->play();
 
         f.pScene->remove(pEmitter);
@@ -222,7 +215,7 @@ TEST_CASE("emitters belong to the scene that made them", "[scene][emitter]") {
     auto pFirst = pContext->make_scene();
     auto pSecond = pContext->make_scene();
 
-    auto pSound = sound_from(short_tone_ogg, sizeof(short_tone_ogg));
+    auto pSound = short_tone();
 
     auto pEmitter = pFirst->make_emitter(pSound);
 
@@ -247,7 +240,7 @@ TEST_CASE("emitters belong to the scene that made them", "[scene][emitter]") {
 TEST_CASE("update is repeatable and does not disturb the scene", "[scene]") {
     fixture f;
 
-    auto pEmitter = f.emitter_for(long_tone_ogg, sizeof(long_tone_ogg));
+    auto pEmitter = f.emitter_for(long_tone());
     pEmitter->set_position({3, 0, 0});
     pEmitter->play();
 
@@ -286,7 +279,7 @@ namespace {
 TEST_CASE("emitters reach the device in listener space", "[scene][listener]") {
     fixture f;
 
-    auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+    auto pEmitter = f.emitter_for(short_tone());
     auto &ears = f.pScene->get_listener();
 
     SECTION("with the listener at the origin, world space passes through") {
@@ -348,7 +341,7 @@ TEST_CASE("emitters reach the device in listener space", "[scene][listener]") {
 TEST_CASE("emitter properties reach the device", "[emitter][listener]") {
     fixture f;
 
-    auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+    auto pEmitter = f.emitter_for(short_tone());
     const auto source = std::dynamic_pointer_cast<openal_emitter>(pEmitter)->source_handle();
 
     const auto al_float = [&source](const ALenum aParameter) {
@@ -411,7 +404,7 @@ TEST_CASE("emitter properties reach the device", "[emitter][listener]") {
 TEST_CASE("direction rotates with the listener but does not translate", "[emitter][listener]") {
     fixture f;
 
-    auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+    auto pEmitter = f.emitter_for(short_tone());
     const auto source = std::dynamic_pointer_cast<openal_emitter>(pEmitter)->source_handle();
 
     const auto al_direction = [&source]() {

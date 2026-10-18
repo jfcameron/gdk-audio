@@ -37,7 +37,7 @@ namespace gdk::audio
         virtual ~pcm_stream() = default;
     };
 
-    /// \brief a playable piece of audio: it describes itself, and opens cursors over its samples
+    /// \brief a playable piece of audio
     class sound {
     public:
         /// \brief 1 for mono, 2 for stereo, 4, 6, 7 or 8 for quad, 5.1, 6.1 and 7.1 in the
@@ -63,13 +63,6 @@ namespace gdk::audio
         virtual ~sound() = default;
     };
 
-    /// \brief build a sound from ogg vorbis data. The library provides this decoder
-    /// as living documentation for how to integrate other decoders, and as a convenience
-    /// for users who are using ogg vorbis data.
-    /// \warning throws if the data is not ogg vorbis
-    [[nodiscard]] sound_shared_ptr_type make_vorbis_sound(const unsigned char *const aData,
-        const std::size_t aSize);
-
     /// \brief build a sound from audio that is already decoded
     ///
     /// \param aFrameCount frames, not samples and not bytes
@@ -77,6 +70,12 @@ namespace gdk::audio
     [[nodiscard]] sound_shared_ptr_type make_pcm_sound(const void *const aData,
         const std::size_t aFrameCount, const std::size_t aChannelCount,
         const std::size_t aSampleRate, const pcm_format aFormat);
+
+    /// \brief creates a new sound from this one but with only PCM data, no decoder
+    /// niche use case is for a short sound that is used frequently, where the
+    /// increased memory usage of raw PCM is worth paying for the decreased compexity
+    /// of not having to manage a decoder and multiple buffers
+    [[nodiscard]] sound_shared_ptr_type make_pcm_sound(const sound &aSound);
 }
 
 #endif

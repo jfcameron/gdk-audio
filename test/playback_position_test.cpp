@@ -8,8 +8,7 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
-#include "data/long_tone_ogg.h"
-#include "data/short_tone_ogg.h"
+#include "tones.h"
 
 #include <chrono>
 #include <thread>
@@ -39,7 +38,7 @@ TEST_CASE("an emitter says how far through its sound it has got", "[position]") 
     SECTION("absent until played, and again once stopped") {
         auto pContext = openal_context::make();
         auto pScene = pContext->make_scene();
-        auto pEmitter = pScene->make_emitter(make_vorbis_sound(long_tone_ogg, sizeof(long_tone_ogg)));
+        auto pEmitter = pScene->make_emitter(long_tone());
 
         REQUIRE_FALSE(pEmitter->playback_position());
 
@@ -54,7 +53,7 @@ TEST_CASE("an emitter says how far through its sound it has got", "[position]") 
         DYNAMIC_SECTION((streamed ? "a streaming" : "a decoded") << " emitter's position follows the clock") {
             auto pContext = openal_context::make(streamed ? STREAMING : openal_policy{});
             auto pScene = pContext->make_scene();
-            auto pSound = make_vorbis_sound(long_tone_ogg, sizeof(long_tone_ogg));
+            auto pSound = long_tone();
             auto pEmitter = pScene->make_emitter(pSound);
 
             const auto rate = static_cast<double>(pSound->sample_rate());
@@ -82,7 +81,7 @@ TEST_CASE("an emitter says how far through its sound it has got", "[position]") 
     SECTION("a pause holds it") {
         auto pContext = openal_context::make(STREAMING);
         auto pScene = pContext->make_scene();
-        auto pEmitter = pScene->make_emitter(make_vorbis_sound(long_tone_ogg, sizeof(long_tone_ogg)));
+        auto pEmitter = pScene->make_emitter(long_tone());
 
         pEmitter->play();
         pump(pScene, 0.3f);
@@ -105,7 +104,7 @@ TEST_CASE("an emitter says how far through its sound it has got", "[position]") 
     SECTION("a looping stream keeps counting past the sound's end") {
         auto pContext = openal_context::make(STREAMING);
         auto pScene = pContext->make_scene();
-        auto pSound = make_vorbis_sound(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pSound = short_tone();
         auto pEmitter = pScene->make_emitter(pSound);
 
         pEmitter->set_looping(true);

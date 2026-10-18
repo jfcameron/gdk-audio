@@ -11,8 +11,7 @@
 #include <gdk/audio/openal_simple_emitter.h>
 #include <gdk/audio/openal_stream_emitter.h>
 
-#include "data/long_tone_ogg.h"
-#include "data/short_tone_ogg.h"
+#include "tones.h"
 
 #include <limits>
 #include <memory>
@@ -21,18 +20,12 @@ using namespace gdk;
 using namespace gdk::audio;
 
 namespace {
-    [[nodiscard]] sound_shared_ptr_type sound_from(const unsigned char *const aData,
-        const std::size_t aSize) {
-        return make_vorbis_sound(aData, aSize);
-    }
-
     struct fixture final {
         context_unique_ptr_type pContext = openal_context::make();
         scene_shared_ptr_type pScene = pContext->make_scene();
 
-        [[nodiscard]] std::shared_ptr<emitter> emitter_for(const unsigned char *const aData,
-            const std::size_t aSize) {
-            return pScene->make_emitter(sound_from(aData, aSize));
+        [[nodiscard]] std::shared_ptr<emitter> emitter_for(const sound_shared_ptr_type &apSound) {
+            return pScene->make_emitter(apSound);
         }
     };
 }
@@ -41,14 +34,14 @@ TEST_CASE("clip length selects the emitter implementation", "[emitter]") {
     fixture f;
 
     SECTION("a clip under five seconds is fully decoded") {
-        auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pEmitter = f.emitter_for(short_tone());
 
         REQUIRE(std::dynamic_pointer_cast<openal_simple_emitter>(pEmitter) != nullptr);
         REQUIRE(std::dynamic_pointer_cast<openal_stream_emitter>(pEmitter) == nullptr);
     }
 
     SECTION("a clip over five seconds is streamed") {
-        auto pEmitter = f.emitter_for(long_tone_ogg, sizeof(long_tone_ogg));
+        auto pEmitter = f.emitter_for(long_tone());
 
         REQUIRE(std::dynamic_pointer_cast<openal_stream_emitter>(pEmitter) != nullptr);
         REQUIRE(std::dynamic_pointer_cast<openal_simple_emitter>(pEmitter) == nullptr);
@@ -59,11 +52,11 @@ TEST_CASE("playback state", "[emitter]") {
     fixture f;
 
     SECTION("a new emitter is not playing") {
-        REQUIRE_FALSE(f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg))->is_playing());
+        REQUIRE_FALSE(f.emitter_for(short_tone())->is_playing());
     }
 
     SECTION("play starts it and stop ends it") {
-        auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pEmitter = f.emitter_for(short_tone());
 
         pEmitter->play();
         REQUIRE(pEmitter->is_playing());
@@ -73,14 +66,14 @@ TEST_CASE("playback state", "[emitter]") {
     }
 
     SECTION("stopping an emitter that never played is harmless") {
-        auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pEmitter = f.emitter_for(short_tone());
 
         REQUIRE_NOTHROW(pEmitter->stop());
         REQUIRE_FALSE(pEmitter->is_playing());
     }
 
     SECTION("play is idempotent") {
-        auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pEmitter = f.emitter_for(short_tone());
 
         pEmitter->play();
         pEmitter->play();
@@ -89,7 +82,7 @@ TEST_CASE("playback state", "[emitter]") {
     }
 
     SECTION("a stopped emitter can play again") {
-        auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pEmitter = f.emitter_for(short_tone());
 
         pEmitter->play();
         pEmitter->stop();
@@ -99,7 +92,7 @@ TEST_CASE("playback state", "[emitter]") {
     }
 
     SECTION("a streaming emitter reports the same states") {
-        auto pEmitter = f.emitter_for(long_tone_ogg, sizeof(long_tone_ogg));
+        auto pEmitter = f.emitter_for(long_tone());
 
         REQUIRE_FALSE(pEmitter->is_playing());
 
@@ -114,7 +107,7 @@ TEST_CASE("playback state", "[emitter]") {
 TEST_CASE("emitter parameters are accepted", "[emitter]") {
     fixture f;
 
-    auto pEmitter = f.emitter_for(short_tone_ogg, sizeof(short_tone_ogg));
+    auto pEmitter = f.emitter_for(short_tone());
 
     SECTION("position") {
         REQUIRE_NOTHROW(pEmitter->set_position({0, 0, 0}));
@@ -143,7 +136,7 @@ TEST_CASE("an emitter outlives the sound it was built from", "[emitter][sound]")
     std::shared_ptr<emitter> pEmitter;
 
     {
-        auto pSound = sound_from(short_tone_ogg, sizeof(short_tone_ogg));
+        auto pSound = short_tone();
         pEmitter = f.pScene->make_emitter(pSound);
     }
 

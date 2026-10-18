@@ -2,6 +2,7 @@
 
 #include <gdk/audio/context.h>
 #include <gdk/audio/emitter.h>
+#include <gdk/audio/ext/vorbis.h>
 #include <gdk/audio/listener.h>
 #include <gdk/audio/openal_context.h>
 #include <gdk/audio/openal_policy.h>
@@ -14,9 +15,11 @@
 
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 using namespace gdk;
 
@@ -41,8 +44,9 @@ int main() {
 
     auto pScene = pAudio->make_scene();
 
-    auto pSound = audio::make_vorbis_sound(POL_chubby_cat_short_ogg,
-        sizeof(POL_chubby_cat_short_ogg));
+    auto pSound = audio::ext::make_vorbis_sound(std::vector<std::byte>(
+        reinterpret_cast<const std::byte *>(POL_chubby_cat_short_ogg),
+        reinterpret_cast<const std::byte *>(POL_chubby_cat_short_ogg) + sizeof(POL_chubby_cat_short_ogg)));
 
     std::cout << "sound: " << pSound->channel_count() << " channel, "
         << pSound->sample_rate() << " Hz, " << pSound->duration() << "s\n";
