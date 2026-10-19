@@ -1,30 +1,17 @@
 # © Joseph Cameron - All Rights Reserved
 
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
 
 project(gdkaudio
     VERSION 0.0
-    DESCRIPTION "game development kit graphics lib")
+    DESCRIPTION "game development kit audio lib")
 
-option(JFC_BUILD_DEMO "Build the demo" ON)
-option(JFC_BUILD_DOCS "Build documentation" ON)
-option(JFC_BUILD_TESTS "Build unit tests" ON)
-
-set(_jfc_outer_build_tests "${JFC_BUILD_TESTS}")
-set(_jfc_outer_build_docs "${JFC_BUILD_DOCS}")
-set(_jfc_outer_build_demo "${JFC_BUILD_DEMO}")
-
-set(JFC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(JFC_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(JFC_BUILD_DEMO OFF CACHE BOOL "" FORCE)
+option(JFC_BUILD_DOCS "Build documentation" OFF)
+option(JFC_BUILD_TESTS "Build unit tests" OFF)
 
 add_subdirectory(extern)
-
-set(JFC_BUILD_TESTS "${_jfc_outer_build_tests}" CACHE BOOL "" FORCE)
-set(JFC_BUILD_DOCS "${_jfc_outer_build_docs}" CACHE BOOL "" FORCE)
-set(JFC_BUILD_DEMO "${_jfc_outer_build_demo}" CACHE BOOL "" FORCE)
 
 file(GLOB_RECURSE _gdk_audio_own_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
@@ -65,18 +52,9 @@ else()
 endif()
 
 add_library(gdkaudio STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_context.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_efx.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_emitter_group.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_listener.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_scene.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_simple_emitter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_stream_emitter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/exception.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/insert_effects.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pcm_sound.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/src/openal_microphone.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_emitter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_listener.cpp
@@ -94,22 +72,17 @@ jfc_generate_build_info()
 target_include_directories(gdkaudio
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/impl/openal/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/impl/null/include>"
         "$<INSTALL_INTERFACE:include>"
     PRIVATE
         "${PROJECT_BINARY_DIR}/generated_include/"
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/include
     )
 
 target_compile_features(gdkaudio PUBLIC cxx_std_20)
 
-set_property(TARGET gdkaudio PROPERTY C_STANDARD 99)
-
 target_link_libraries(gdkaudio PUBLIC
     gdkmath
-    jfc-smart_handles
-    OpenAL)
+    jfc-smart_handles)
 
 add_library(gdkaudio_vorbis STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ext/vorbis_sound.cpp
@@ -128,15 +101,23 @@ target_compile_features(gdkaudio_vorbis PUBLIC cxx_std_20)
 
 set_property(TARGET gdkaudio_vorbis PROPERTY C_STANDARD 99)
 
-if (JFC_BUILD_DEMO)
-    add_subdirectory(demo)
-endif()
+add_library(gdkaudio_conformance INTERFACE)
+
+target_sources(gdkaudio_conformance INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/context_conformance.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/emitter_conformance.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/scene_conformance.cpp)
+
+target_include_directories(gdkaudio_conformance INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance)
+
+target_link_libraries(gdkaudio_conformance INTERFACE
+    gdkaudio)
 
 if (JFC_BUILD_TESTS)
     add_subdirectory(test)
 endif()
 
 if (JFC_BUILD_DOCS)
-    #add_subdirectory(docs)
+    add_subdirectory(docs)
 endif()
-

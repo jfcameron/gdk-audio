@@ -38,10 +38,6 @@ void null_emitter::set_attenuation(const audio_floating_point_type aReferenceDis
     mRolloffFactor = aRolloffFactor;
 }
 
-void null_emitter::set_lowpass(const lowpass_parameters &) { mHasLowpass = true; }
-
-void null_emitter::clear_lowpass() { mHasLowpass = false; }
-
 bool null_emitter::is_playing() const { return mPlaying && !mPaused; }
 
 void null_emitter::set_looping(const bool aLooping) { mLooping = aLooping; }
@@ -77,8 +73,6 @@ std::optional<double> null_emitter::playback_position() const { return {}; }
 void null_emitter::finish() {
     if (!mLooping) stop();
 }
-
-bool null_emitter::has_lowpass() const { return mHasLowpass; }
 
 audio_floating_point_type null_emitter::inner_angle() const { return mInnerAngle; }
 audio_floating_point_type null_emitter::outer_angle() const { return mOuterAngle; }

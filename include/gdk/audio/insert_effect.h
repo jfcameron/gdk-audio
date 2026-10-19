@@ -22,13 +22,13 @@ namespace gdk::audio {
     /// spatialisation (e.g: echoing where the echo locations vary from the emitter's location)
     class insert_effect {
     public:
-        /// \brief transform aFrames frames in place
+        /// \brief transform the frames in aPCM in place
         ///
         /// Called from scene::update, once per decoded buffer, on the thread that calls it. The state
         /// an effect keeps is per emitter, since each emitter processes its own audio.
         ///
-        /// \param aPCM interleaved samples, aFrames * aChannelCount of them
-        /// \param aFrames how many frames are present, which is not always the whole buffer
+        /// \param aPCM interleaved samples, whole frames of aChannelCount each. How many frames is
+        ///        its size over the frame's size, and not always a whole buffer's worth
         /// \param aFormat the layout of aPCM \see sound::format
         /// \param aChannelCount 1 for mono, 2 for stereo
         ///

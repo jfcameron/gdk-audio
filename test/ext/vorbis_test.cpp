@@ -3,12 +3,7 @@
 #include <jfc/catch.hpp>
 
 #include <gdk/audio/exception.h>
-#include <gdk/audio/emitter.h>
 #include <gdk/audio/ext/vorbis.h>
-#include <gdk/audio/openal_context.h>
-#include <gdk/audio/openal_simple_emitter.h>
-#include <gdk/audio/openal_stream_emitter.h>
-#include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
 #include "data/long_tone_ogg.h"
@@ -111,21 +106,4 @@ TEST_CASE("a vorbis sound's streams decode the tone that was encoded, and decode
         REQUIRE(pDecoded->sample_rate() == 8000);
         REQUIRE(all_of(*pDecoded) == decoded);
     }
-}
-
-TEST_CASE("a backend plays a vorbis sound as any other: short ones whole, long ones streamed", "[ext][vorbis]") {
-    auto pContext = openal_context::make();
-    auto pScene = pContext->make_scene();
-
-    auto pShort = pScene->make_emitter(ext::make_vorbis_sound(bytes_of(short_tone_ogg)));
-    auto pLong = pScene->make_emitter(ext::make_vorbis_sound(bytes_of(long_tone_ogg)));
-
-    REQUIRE(std::dynamic_pointer_cast<openal_simple_emitter>(pShort) != nullptr);
-    REQUIRE(std::dynamic_pointer_cast<openal_stream_emitter>(pLong) != nullptr);
-
-    pShort->play();
-    pLong->play();
-
-    REQUIRE(pShort->is_playing());
-    REQUIRE(pLong->is_playing());
 }

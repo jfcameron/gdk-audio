@@ -36,26 +36,22 @@ jobs:
             runner: windows-latest
             tests: true
 
-          # Builds the demo and nothing else, so that an interface change which breaks the one
-          # worked example is caught without every other leg paying for it.
-          - preset: linux-gcc-demo
+          - preset: linux-clang-asan
             runner: ubuntu-latest
-            tests: false
+            tests: true
+
+          - preset: linux-gcc-ci
+            runner: ubuntu-latest
+            tests: true
+
+          - preset: linux-clang-ci
+            runner: ubuntu-latest
+            tests: true
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      # OpenAL probes for backend headers at configure time and silently drops the ones it cannot
-      # find. The suite runs against the null backend either way, so this is not what makes the tests
-      # pass -- it is what makes the Linux legs actually compile the ALSA and PulseAudio backends
-      # rather than a library with no real backend in it.
-      - name: install audio backend headers
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libasound2-dev libpulse-dev
 
       - name: configure
         run: cmake --preset ${{ matrix.preset }}
@@ -63,8 +59,47 @@ jobs:
       - name: build
         run: cmake --build --preset ${{ matrix.preset }}
 
-      # The null device is pinned by the test target itself, so no audio hardware is required here.
-      # Skipped on legs that build no test target, which have no test preset to run.
       - name: test
         if: matrix.tests
         run: ctest --preset ${{ matrix.preset }}
+
+  emscripten:
+    name: emscripten (wasm)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+
+      - name: report the toolchain
+        run: emcc --version
+
+      - name: configure
+        run: emcmake cmake --preset emscripten
+
+      - name: build
+        run: cmake --build --preset emscripten
+
+  docs:
+    name: docs (doxygen)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            doxygen \
+            graphviz
+
+      - name: generate documentation
+        run: cmake --preset linux-docs

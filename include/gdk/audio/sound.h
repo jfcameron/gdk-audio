@@ -40,9 +40,11 @@ namespace gdk::audio
     /// \brief a playable piece of audio
     class sound {
     public:
-        /// \brief 1 for mono, 2 for stereo, 4, 6, 7 or 8 for quad, 5.1, 6.1 and 7.1 in the
-        /// backend's channel order (OpenAL's: front left, front right, centre, LFE, back left, back
-        /// right, side left, side right). Only a mono sound is placed in space by a plain emitter;
+        /// \brief 1 for mono, 2 for stereo, 4, 6, 7 or 8 for quad, 5.1, 6.1 and 7.1, **in WAVE's
+        /// channel order**, whatever the implementation's own: front left, front right, centre, LFE,
+        /// back left, back right, side left, side right, leaving out what the layout has no speaker
+        /// for (quad is front left, front right, back left, back right; 6.1 has a back centre where
+        /// 7.1 has back left and right). Only a mono sound is placed in space by a plain emitter;
         /// the rest play as a speaker bed, each channel to the matching output, or placed a channel
         /// at a time by scene::make_emitter's channel positions. The backend may lack the formats
         /// past stereo; the scene says so when an emitter is made.

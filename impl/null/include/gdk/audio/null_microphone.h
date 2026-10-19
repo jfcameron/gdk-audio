@@ -5,7 +5,7 @@
 
 #include <gdk/audio/microphone.h>
 
-#include <gdk/audio/impl_capture_buffer.h>
+#include <gdk/audio/ext/capture_buffer.h>
 
 #include <string>
 #include <vector>
@@ -52,7 +52,7 @@ namespace gdk::audio {
 
         std::vector<unsigned char> mPending;
 
-        capture_buffer mCaptured;
+        ext::capture_buffer mCaptured;
 
         bool mCapturing{false};
     };

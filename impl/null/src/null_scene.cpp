@@ -51,7 +51,9 @@ void null_scene::compact() const {
         [](const std::weak_ptr<emitter> &aEmitter) { return aEmitter.expired(); }), mEmitters.end());
 }
 
-emitter_shared_ptr_type null_scene::make_emitter(sound_shared_ptr_type) {
+emitter_shared_ptr_type null_scene::make_emitter(sound_shared_ptr_type aSound) {
+    if (!aSound) throw exception("tried to make an emitter from a null sound");
+
     auto pEmitter = std::make_shared<null_emitter>();
 
     mEmitters.push_back(pEmitter);
@@ -60,7 +62,12 @@ emitter_shared_ptr_type null_scene::make_emitter(sound_shared_ptr_type) {
 }
 
 emitter_shared_ptr_type null_scene::make_emitter(sound_shared_ptr_type aSound,
-    insert_effect_collection_type) {
+    insert_effect_collection_type aInserts) {
+    if (!aSound) throw exception("tried to make an emitter from a null sound");
+
+    for (const auto &pInsert : aInserts)
+        if (!pInsert) throw exception("an insert effect in the chain was null");
+
     return make_emitter(std::move(aSound));
 }
 
@@ -110,14 +117,6 @@ std::size_t null_scene::emitter_count() const {
 
     return mEmitters.size();
 }
-
-void null_scene::set_reverb(const reverb_parameters &) { mHasSendEffect = true; }
-
-void null_scene::set_echo(const echo_parameters &) { mHasSendEffect = true; }
-
-void null_scene::clear_send_effect() { mHasSendEffect = false; }
-
-bool null_scene::has_send_effect() const { return mHasSendEffect; }
 
 void null_scene::update() { ++mUpdateCount; }
 

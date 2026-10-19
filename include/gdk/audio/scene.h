@@ -7,7 +7,6 @@
 #include <gdk/audio/emitter_group.h>
 #include <gdk/audio/insert_effect.h>
 #include <gdk/audio/listener.h>
-#include <gdk/audio/send_effect.h>
 #include <gdk/audio/sound.h>
 
 #include <span>
@@ -43,19 +42,6 @@ namespace gdk::audio {
 
         /// \brief how many of this scene's emitters are still alive
         [[nodiscard]] virtual std::size_t emitter_count() const = 0;
-
-        /// \brief give this scene a reverb, heard by every emitter in it
-        virtual void set_reverb(const reverb_parameters &aParameters) = 0;
-
-        /// \brief give this scene an echo, heard by every emitter in it
-        /// \warning throws if the backend has no auxiliary send available
-        virtual void set_echo(const echo_parameters &aParameters) = 0;
-
-        /// \brief remove whatever send effect this scene
-        virtual void clear_send_effect() = 0;
-
-        /// \brief whether this scene currently has one
-        [[nodiscard]] virtual bool has_send_effect() const = 0;
 
         /// \brief must be called in your update loop for the scene to be heard correctly
         virtual void update() = 0;

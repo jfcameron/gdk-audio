@@ -4,17 +4,11 @@
 #define GDK_AUDIO_EMITTER_H
 
 #include <gdk/audio/types.h>
-#include <gdk/audio/send_effect.h>
 
 #include <optional>
 
 namespace gdk::audio
 {
-    struct lowpass_parameters final {
-        audio_floating_point_type gain = 1.0f;                  ///< overall level, 0 to 1
-        audio_floating_point_type high_frequency_gain = 1.0f;   ///< level of the high frequencies, 0 to 1
-    };
-
     /// \brief emits a sound at a 3d position within a scene.
     ///
     /// Positions and velocities are in the scene's space
@@ -74,18 +68,11 @@ namespace gdk::audio
         /// \brief how this emitter's volume falls away with distance
         ///
         /// \param aReferenceDistance the distance at which gain is unattenuated
-        /// \param aMaxDistance where attenuation stops; what happens beyond it is the distance model's
-        ///        business \see openal_policy::DISTANCE_MODEL
+        /// \param aMaxDistance the distance the implementation's curve is shaped to end at
         /// \param aRolloffFactor scales how quickly the fall off happens. 0 disables it.
         virtual void set_attenuation(const audio_floating_point_type aReferenceDistance,
             const audio_floating_point_type aMaxDistance,
             const audio_floating_point_type aRolloffFactor) = 0;
-
-        /// \brief muffle this emitter
-        virtual void set_lowpass(const lowpass_parameters &aParameters) = 0;
-
-        /// \brief remove the muffling
-        virtual void clear_lowpass() = 0;
 
         /// \brief check if the emitter is emitting a sound
         [[nodiscard]] virtual bool is_playing() const = 0;

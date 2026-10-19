@@ -36,9 +36,6 @@ namespace gdk::audio {
             const audio_floating_point_type aMaxDistance,
             const audio_floating_point_type aRolloffFactor) override;
 
-        virtual void set_lowpass(const lowpass_parameters &aParameters) override;
-        virtual void clear_lowpass() override;
-
         [[nodiscard]] virtual bool is_playing() const override;
         virtual void set_looping(const bool aLooping) override;
         [[nodiscard]] virtual bool is_looping() const override;
@@ -53,8 +50,6 @@ namespace gdk::audio {
         [[nodiscard]] virtual std::optional<double> playback_position() const override;
 
         void finish();
-
-        [[nodiscard]] bool has_lowpass() const;
 
         [[nodiscard]] audio_floating_point_type inner_angle() const;
         [[nodiscard]] audio_floating_point_type outer_angle() const;
@@ -92,7 +87,6 @@ namespace gdk::audio {
 
         std::vector<vector_type> mChannelPositions;
 
-        bool mHasLowpass{false};
         bool mPlaying{false};
         bool mPaused{false};
         bool mLooping{false};

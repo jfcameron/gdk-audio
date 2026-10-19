@@ -3,84 +3,29 @@
 #include <jfc/catch.hpp>
 
 #include <gdk/audio/exception.h>
-#include <gdk/audio/context.h>
-#include <gdk/audio/openal_context.h>
-#include <gdk/audio/openal_policy.h>
-#include <gdk/audio/openal_simple_emitter.h>
-#include <gdk/audio/openal_stream_emitter.h>
-#include <gdk/audio/emitter.h>
-#include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
 #include "tones.h"
 
-#include <AL/al.h>
-
 #include <algorithm>
 #include <cstdint>
 #include <memory>
-#include <vector>
 #include <span>
+#include <vector>
 
 using namespace gdk;
 using namespace gdk::audio;
 
-namespace {
-    [[nodiscard]] context_unique_ptr_type make_context() {
-        return openal_context::make();
-    }
-}
-
-TEST_CASE("context creation", "[context]") {
-    SECTION("a context can be created") {
-        REQUIRE(make_context() != nullptr);
-    }
-}
-
-TEST_CASE("a second live context is refused", "[context]") {
-    auto pFirst = make_context();
-
-    REQUIRE(pFirst != nullptr);
-    REQUIRE_THROWS_AS(make_context(), exception);
-}
-
-TEST_CASE("the refusal is about overlap, not about counting", "[context]") {
-    for (int i = 0; i < 3; ++i) {
-        auto pContext = make_context();
-
-        REQUIRE(pContext != nullptr);
-    }
-}
-
-TEST_CASE("a sound describes itself", "[context][sound]") {
-    auto pContext = make_context();
-
-    SECTION("a mono clip reports one channel") {
-        auto pSound = short_tone();
-
-        REQUIRE(pSound->channel_count() == 1);
+TEST_CASE("the test tones describe themselves", "[sound]") {
+    SECTION("a mono tone has one channel and a stereo one two") {
+        REQUIRE(short_tone()->channel_count() == 1);
+        REQUIRE(stereo_tone()->channel_count() == 2);
     }
 
-    SECTION("a stereo clip reports two channels") {
-        auto pSound = stereo_tone();
-
-        REQUIRE(pSound->channel_count() == 2);
-    }
-
-    SECTION("duration matches the clips the fixtures were made at") {
-        auto pShort = short_tone();
-        auto pLong = long_tone();
-
-        REQUIRE(pShort->duration() == Approx(1.0f).margin(0.001));
-        REQUIRE(pLong->duration() == Approx(6.0f).margin(0.001));
-    }
-
-    SECTION("the fixtures straddle the streaming threshold") {
-        auto pShort = short_tone();
-        auto pLong = long_tone();
-
-        REQUIRE(pShort->duration() < 5.0f);
-        REQUIRE(pLong->duration() > 5.0f);
+    SECTION("each lasts as long as it was made") {
+        REQUIRE(short_tone()->duration() == Approx(1.0f).margin(0.001));
+        REQUIRE(long_tone()->duration() == Approx(6.0f).margin(0.001));
+        REQUIRE(tiny_tone()->duration() == Approx(0.25f).margin(0.001));
     }
 }
 
@@ -224,90 +169,5 @@ TEST_CASE("any sound decoded now is a sound over its decoded audio", "[sound]") 
             REQUIRE(out[frame * 2] == static_cast<std::int16_t>(frame));
             REQUIRE(out[frame * 2 + 1] == static_cast<std::int16_t>(-static_cast<int>(frame)));
         }
-    }
-
-    SECTION("emitters made for it never open the original again") {
-        auto pContext = make_context();
-        auto pScene = pContext->make_scene();
-
-        for (int each = 0; each < 3; ++each) pScene->make_emitter(pDecoded)->play();
-
-        REQUIRE(original.opened == 1);
-    }
-}
-
-TEST_CASE("make_scene", "[context][scene]") {
-    auto pContext = make_context();
-
-    SECTION("a scene can be made") {
-        REQUIRE(pContext->make_scene() != nullptr);
-    }
-
-    SECTION("scenes are distinct, and so are their listeners") {
-        auto pFirst = pContext->make_scene();
-        auto pSecond = pContext->make_scene();
-
-        REQUIRE(pFirst != pSecond);
-        REQUIRE(&pFirst->get_listener() != &pSecond->get_listener());
-    }
-
-    SECTION("a new scene is empty") {
-        REQUIRE(pContext->make_scene()->emitter_count() == 0);
-    }
-}
-
-TEST_CASE("the context policy is honoured", "[context][policy]") {
-    SECTION("its defaults are usable without saying anything") {
-        auto pContext = openal_context::make();
-
-        REQUIRE(pContext != nullptr);
-        REQUIRE(pContext->make_scene() != nullptr);
-    }
-
-    SECTION("the distance model reaches the device") {
-        auto pContext = openal_context::make(openal_policy{distance_model::exponent_clamped});
-
-        REQUIRE(alGetInteger(AL_DISTANCE_MODEL) == AL_EXPONENT_DISTANCE_CLAMPED);
-    }
-
-    SECTION("switching the model off reaches it too") {
-        auto pContext = openal_context::make(openal_policy{distance_model::none});
-
-        REQUIRE(alGetInteger(AL_DISTANCE_MODEL) == AL_NONE);
-    }
-
-    SECTION("doppler factor and speed of sound reach the device") {
-        auto pContext = openal_context::make(
-            openal_policy{.DISTANCE_MODEL = distance_model::linear_clamped,
-                .DOPPLER_FACTOR = 2.5f, .SPEED_OF_SOUND = 500.0f});
-
-        REQUIRE(alGetFloat(AL_DOPPLER_FACTOR) == Approx(2.5f));
-        REQUIRE(alGetFloat(AL_SPEED_OF_SOUND) == Approx(500.0f));
-    }
-
-    SECTION("the streaming threshold decides the emitter implementation") {
-        auto pContext = openal_context::make(
-            openal_policy{.DISTANCE_MODEL = distance_model::linear_clamped,
-                .DOPPLER_FACTOR = 1, .SPEED_OF_SOUND = 343.3f,
-                .STREAMING_THRESHOLD_IN_SECONDS = 0.5f});
-
-        auto pScene = pContext->make_scene();
-
-        auto pEmitter = pScene->make_emitter(short_tone());
-
-        REQUIRE(std::dynamic_pointer_cast<openal_stream_emitter>(pEmitter) != nullptr);
-    }
-
-    SECTION("a scene made from the context carries its policy") {
-        auto pContext = openal_context::make(
-            openal_policy{.DISTANCE_MODEL = distance_model::linear_clamped,
-                .DOPPLER_FACTOR = 1, .SPEED_OF_SOUND = 343.3f,
-                .STREAMING_THRESHOLD_IN_SECONDS = 100.0f});
-
-        auto pScene = pContext->make_scene();
-
-        auto pEmitter = pScene->make_emitter(long_tone());
-
-        REQUIRE(std::dynamic_pointer_cast<openal_simple_emitter>(pEmitter) != nullptr);
     }
 }

@@ -57,7 +57,7 @@ namespace gdk::audio {
         //! how many frames are held and not yet taken
         [[nodiscard]] virtual std::size_t available_in_frames() const = 0;
 
-        //! whether the buffer has reached \ref capacity_in_frames
+        //! whether the buffer holds as many frames as capacity_in_frames() says it can
         [[nodiscard]] virtual bool capacity_reached() const = 0;
 
         /// \brief how many frames the cap policy has discarded

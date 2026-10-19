@@ -4,31 +4,17 @@ jfc_add_tests(
     C++_STANDARD 20
 
     TEST_SOURCE_FILES
-        "${CMAKE_CURRENT_LIST_DIR}/context_test.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/ext/capture_buffer_test.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/insert_effect_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/looping_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/scene_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/send_effect_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/emitter_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/emitter_group_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/multichannel_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/pause_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/playback_position_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/null_backend_test.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/microphone_test.cpp"
-
-    INCLUDE_DIRECTORIES
-        "${CMAKE_CURRENT_LIST_DIR}"
-        "${CMAKE_CURRENT_LIST_DIR}/../src/include"
+        "${CMAKE_CURRENT_LIST_DIR}/null_conformance.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/null_context_test.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/sound_test.cpp"
 
     LIBRARIES
         gdkaudio
-        "${OpenAL_LIBRARIES}"
-        gdkmath)
+        gdkaudio_conformance)
 
 set_property(TARGET ${JFC_TEST_TARGET} PROPERTY CXX_EXTENSIONS OFF)
-
-set_tests_properties(${JFC_TEST_TARGET} PROPERTIES ENVIRONMENT "ALSOFT_DRIVERS=null")
 
 jfc_add_tests(
     C++_STANDARD 20
@@ -40,10 +26,6 @@ jfc_add_tests(
         "${CMAKE_CURRENT_LIST_DIR}"
 
     LIBRARIES
-        gdkaudio_vorbis
-        "${OpenAL_LIBRARIES}"
-        gdkmath)
+        gdkaudio_vorbis)
 
 set_property(TARGET ${JFC_TEST_TARGET} PROPERTY CXX_EXTENSIONS OFF)
-
-set_tests_properties(${JFC_TEST_TARGET} PROPERTIES ENVIRONMENT "ALSOFT_DRIVERS=null")

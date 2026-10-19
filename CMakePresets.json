@@ -12,12 +12,7 @@
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "JFC_BUILD_TESTS": "ON",
-        "JFC_BUILD_DEMO": "OFF",
-        "JFC_BUILD_DOCS": "OFF",
-        "ALSOFT_UTILS": "OFF",
-        "ALSOFT_EXAMPLES": "OFF",
-        "ALSOFT_TESTS": "OFF",
-        "ALSOFT_INSTALL": "OFF"
+        "JFC_BUILD_DOCS": "OFF"
       }
     },
     {
@@ -51,17 +46,50 @@
       }
     },
     {
-      "name": "linux-gcc-demo",
-      "displayName": "Linux / gcc / demo",
+      "name": "linux-gcc-ci",
+      "displayName": "Linux / gcc / CI",
+      "description": "Warnings are errors. CI only: a consumer's build should not fail on a warning we introduced, and ours should not survive one.",
       "inherits": "linux-gcc",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
       "cacheVariables": {
-        "JFC_BUILD_DEMO": "ON",
-        "JFC_BUILD_TESTS": "OFF"
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Werror"
+      }
+    },
+    {
+      "name": "linux-clang-ci",
+      "displayName": "Linux / clang / CI",
+      "description": "Warnings are errors. CI only: a consumer's build should not fail on a warning we introduced, and ours should not survive one.",
+      "inherits": "linux-clang",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Werror"
+      }
+    },
+    {
+      "name": "linux-clang-asan",
+      "displayName": "Linux / clang / asan + ubsan",
+      "inherits": "linux-clang",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
       }
     },
     {
       "name": "macos-clang",
-      "displayName": "macOS / clang / libc++",
+      "displayName": "macOS / clang",
       "inherits": "base",
       "condition": {
         "type": "equals",
@@ -69,7 +97,7 @@
         "rhs": "Darwin"
       },
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": "-Wall -Wextra -stdlib=libc++"
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra"
       }
     },
     {
@@ -84,16 +112,43 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "/W4 /EHsc /permissive-"
       }
+    },
+    {
+      "name": "windows-msvc-cross",
+      "displayName": "Windows / MSVC / cross from unix (msvc-wine)",
+      "description": "Cross-compiles the windows leg from a unix host through msvc-wine. Not gated on hostSystemName: the host is deliberately not Windows. Set MSVC_WINE_ROOT if msvc-wine is not in /opt/msvc.",
+      "inherits": "base",
+      "generator": "Ninja",
+      "toolchainFile": "${sourceDir}/cmake/jfc-cmake/toolchains/toolchain-msvc-wine.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS": "/W4 /EHsc /permissive-"
+      }
+    },
+    {
+      "name": "emscripten",
+      "displayName": "Emscripten / wasm",
+      "description": "Configure with `emcmake cmake --preset emscripten`, which supplies the toolchain file.",
+      "inherits": "base",
+      "cacheVariables": {
+        "JFC_BUILD_TESTS": "OFF",
+        "JFC_BUILD_DOCS": "OFF"
+      }
+    },
+    {
+      "name": "linux-docs",
+      "displayName": "Linux / documentation",
+      "inherits": "linux-gcc",
+      "cacheVariables": {
+        "JFC_BUILD_DOCS": "ON",
+        "JFC_BUILD_TESTS": "OFF"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "linux-gcc",
       "configurePreset": "linux-gcc",
-      "targets": [
-        "gdkaudio",
-        "gdkaudio_test_0"
-      ],
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -103,10 +158,6 @@
     {
       "name": "linux-clang",
       "configurePreset": "linux-clang",
-      "targets": [
-        "gdkaudio",
-        "gdkaudio_test_0"
-      ],
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -114,11 +165,26 @@
       }
     },
     {
-      "name": "linux-gcc-demo",
-      "configurePreset": "linux-gcc-demo",
-      "targets": [
-        "gdkaudio-demo"
-      ],
+      "name": "linux-gcc-ci",
+      "configurePreset": "linux-gcc-ci",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang-ci",
+      "configurePreset": "linux-clang-ci",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang-asan",
+      "configurePreset": "linux-clang-asan",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -128,10 +194,6 @@
     {
       "name": "macos-clang",
       "configurePreset": "macos-clang",
-      "targets": [
-        "gdkaudio",
-        "gdkaudio_test_0"
-      ],
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -141,27 +203,26 @@
     {
       "name": "windows-msvc",
       "configurePreset": "windows-msvc",
-      "configuration": "Release",
-      "targets": [
-        "gdkaudio",
-        "gdkaudio_test_0"
-      ],
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      }
+      },
+      "configuration": "Release"
+    },
+    {
+      "name": "emscripten",
+      "configurePreset": "emscripten"
+    },
+    {
+      "name": "windows-msvc-cross",
+      "configurePreset": "windows-msvc-cross"
     }
   ],
   "testPresets": [
     {
       "name": "linux-gcc",
       "configurePreset": "linux-gcc",
-      "filter": {
-        "include": {
-          "name": "gdkaudio_test_0"
-        }
-      },
       "output": {
         "outputOnFailure": true
       },
@@ -174,11 +235,42 @@
     {
       "name": "linux-clang",
       "configurePreset": "linux-clang",
-      "filter": {
-        "include": {
-          "name": "gdkaudio_test_0"
-        }
+      "output": {
+        "outputOnFailure": true
       },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-gcc-ci",
+      "configurePreset": "linux-gcc-ci",
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang-ci",
+      "configurePreset": "linux-clang-ci",
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang-asan",
+      "configurePreset": "linux-clang-asan",
       "output": {
         "outputOnFailure": true
       },
@@ -191,11 +283,6 @@
     {
       "name": "macos-clang",
       "configurePreset": "macos-clang",
-      "filter": {
-        "include": {
-          "name": "gdkaudio_test_0"
-        }
-      },
       "output": {
         "outputOnFailure": true
       },
@@ -208,12 +295,6 @@
     {
       "name": "windows-msvc",
       "configurePreset": "windows-msvc",
-      "configuration": "Release",
-      "filter": {
-        "include": {
-          "name": "gdkaudio_test_0"
-        }
-      },
       "output": {
         "outputOnFailure": true
       },
@@ -221,6 +302,14 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
+      },
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-msvc-cross",
+      "configurePreset": "windows-msvc-cross",
+      "output": {
+        "outputOnFailure": true
       }
     }
   ]

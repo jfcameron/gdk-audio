@@ -54,11 +54,6 @@ namespace gdk::audio {
 
         [[nodiscard]] virtual std::size_t emitter_count() const override;
 
-        virtual void set_reverb(const reverb_parameters &aParameters) override;
-        virtual void set_echo(const echo_parameters &aParameters) override;
-        virtual void clear_send_effect() override;
-        [[nodiscard]] virtual bool has_send_effect() const override;
-
         virtual void update() override;
 
         //! how many times update has been called, so a caller's loop can be checked
@@ -72,7 +67,6 @@ namespace gdk::audio {
 
         mutable std::vector<std::weak_ptr<emitter>> mEmitters;
 
-        bool mHasSendEffect{false};
         std::size_t mUpdateCount{0};
     };
 }

@@ -11,6 +11,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <span>
 
 namespace gdk::audio::ext
 {
@@ -18,7 +19,7 @@ namespace gdk::audio::ext
     {
         using decoder_ptr_type = std::unique_ptr<stb_vorbis, std::function<void(stb_vorbis *const)>>;
 
-        [[nodiscard]] decoder_ptr_type open_decoder(const std::vector<std::byte> &aData)
+        [[nodiscard]] decoder_ptr_type open_decoder(std::span<const std::byte> aData)
         {
             int error = VORBIS__no_error;
 

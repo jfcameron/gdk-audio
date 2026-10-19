@@ -10,7 +10,7 @@
 using namespace gdk::audio;
 
 null_microphone::null_microphone(request aRequest)
-: mRequest(validated(aRequest))
+: mRequest(ext::validated(aRequest))
 , mDeviceName(mRequest.device_name.empty() ? "null default device" : mRequest.device_name)
 , mCaptured(mRequest.capacity_in_frames,
     mRequest.channel_count * bytes_per_sample(mRequest.format), mRequest.drop_oldest_when_full)

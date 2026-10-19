@@ -10,7 +10,6 @@
 #include <gdk/audio/listener.h>
 #include <gdk/audio/microphone.h>
 #include <gdk/audio/scene.h>
-#include <gdk/audio/send_effect.h>
 #include <gdk/audio/sound.h>
 #include <gdk/audio/types.h>
 
