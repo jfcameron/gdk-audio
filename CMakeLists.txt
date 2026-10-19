@@ -81,8 +81,7 @@ target_include_directories(gdkaudio
 target_compile_features(gdkaudio PUBLIC cxx_std_20)
 
 target_link_libraries(gdkaudio PUBLIC
-    gdkmath
-    jfc-smart_handles)
+    gdkmath)
 
 add_library(gdkaudio_vorbis STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ext/vorbis_sound.cpp

@@ -6,10 +6,6 @@ set(_jfc_outer_build_docs "${JFC_BUILD_DOCS}")
 set(JFC_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(JFC_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 
-if (NOT TARGET jfc-smart_handles)
-    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/jfc-smart_handles")
-endif()
-
 if (NOT TARGET gdkmath)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/gdk-math")
 endif()
