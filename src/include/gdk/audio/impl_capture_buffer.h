@@ -1,7 +1,7 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
-#ifndef GDK_AUDIO_EXT_CAPTURE_BUFFER_H
-#define GDK_AUDIO_EXT_CAPTURE_BUFFER_H
+#ifndef GDK_AUDIO_IMPL_CAPTURE_BUFFER_H
+#define GDK_AUDIO_IMPL_CAPTURE_BUFFER_H
 
 #include <gdk/audio/exception.h>
 #include <gdk/audio/microphone.h>
@@ -12,7 +12,7 @@
 #include <vector>
 #include <span>
 
-namespace gdk::audio::ext {
+namespace gdk::audio {
     [[nodiscard]] inline const microphone::request &validated(const microphone::request &aRequest) {
         if (!aRequest.channel_count) throw exception("a microphone with no channels cannot capture");
 

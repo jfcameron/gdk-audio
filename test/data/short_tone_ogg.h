@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef SHORT_TONE_OGG_H
 #define SHORT_TONE_OGG_H

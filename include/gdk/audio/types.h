@@ -1,11 +1,11 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_AUDIO_TYPES_H
 #define GDK_AUDIO_TYPES_H
 
-#include <gdk/math_ops.h>
-#include <gdk/quaternion.h>
-#include <gdk/vector3.h>
+#include <gdk/math/ops.h>
+#include <gdk/math/quaternion.h>
+#include <gdk/math/vector3.h>
 
 #include <memory>
 
@@ -20,8 +20,8 @@ namespace gdk::audio {
 
     using audio_floating_point_type = float;
 
-    using audio_vector3_type = gdk::vector3<audio_floating_point_type>;
-    using audio_quaternion_type = gdk::quaternion<audio_floating_point_type>;
+    using audio_vector3_type = gdk::math::vector3<audio_floating_point_type>;
+    using audio_quaternion_type = gdk::math::quaternion<audio_floating_point_type>;
 
     using context_unique_ptr_type = std::unique_ptr<context>;
     using context_shared_ptr_type = std::shared_ptr<context>;

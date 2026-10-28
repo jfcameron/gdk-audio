@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef STEREO_TONE_OGG_H
 #define STEREO_TONE_OGG_H

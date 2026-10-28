@@ -1,17 +1,26 @@
-# © Joseph Cameron - All Rights Reserved
+# © Joseph Cameron - MIT License
 
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
+if (TARGET gdkaudio)
+    return()
+endif()
+
+project(gdk-audio
+    VERSION 1.0
+    DESCRIPTION "the gdk audio interface: scenes of emitters and a listener, sounds, insert effects and microphones, and a null implementation"
+    LANGUAGES C CXX)
+
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
 
-project(gdkaudio
-    VERSION 0.0
-    DESCRIPTION "game development kit audio lib")
+option(GDKAUDIO_BUILD_TESTS "Build unit tests" ${PROJECT_IS_TOP_LEVEL})
+option(GDKAUDIO_BUILD_DOCS "Build documentation" OFF)
 
-option(JFC_BUILD_DOCS "Build documentation" OFF)
-option(JFC_BUILD_TESTS "Build unit tests" OFF)
+if (GDKAUDIO_BUILD_DOCS AND NOT GDKAUDIO_BUILD_TESTS)
+    add_subdirectory(docs)
 
-add_subdirectory(extern)
+    return()
+endif()
 
 file(GLOB_RECURSE _gdk_audio_own_sources
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
@@ -27,6 +36,8 @@ foreach(_source ${_gdk_audio_own_sources})
             "individual headers this file actually needs.")
     endif()
 endforeach()
+
+add_subdirectory(extern)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -51,72 +62,103 @@ else()
     endforeach()
 endif()
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 add_library(gdkaudio STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/exception.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/insert_effects.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/pcm_sound.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_context.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_emitter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_listener.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_microphone.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_scene.cpp)
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/exception.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/insert_effects.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/pcm_sound.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_context.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_emitter.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_listener.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_microphone.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/impl/null/src/null_scene.cpp")
 
 add_library(gdk::audio ALIAS gdkaudio)
 
-set_target_properties(gdkaudio PROPERTIES EXPORT_NAME audio)
-
-set_target_properties(gdkaudio PROPERTIES PREFIX "lib")
-
-jfc_generate_build_info()
+set_target_properties(gdkaudio PROPERTIES EXPORT_NAME audio PREFIX "lib")
 
 target_include_directories(gdkaudio
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/impl/null/include>"
-        "$<INSTALL_INTERFACE:include>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     PRIVATE
-        "${PROJECT_BINARY_DIR}/generated_include/"
-    )
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/include")
 
 target_compile_features(gdkaudio PUBLIC cxx_std_20)
 
-target_link_libraries(gdkaudio PUBLIC
-    gdkmath)
+target_link_libraries(gdkaudio PUBLIC gdkmath)
 
 add_library(gdkaudio_vorbis STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ext/vorbis_sound.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ext/stb_vorbis.c)
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/ext/vorbis_sound.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/ext/stb_vorbis.c")
 
 add_library(gdk::audio_vorbis ALIAS gdkaudio_vorbis)
 
-set_target_properties(gdkaudio_vorbis PROPERTIES EXPORT_NAME audio_vorbis)
-
-set_target_properties(gdkaudio_vorbis PROPERTIES PREFIX "lib")
-
-target_link_libraries(gdkaudio_vorbis PUBLIC
-    gdkaudio)
+set_target_properties(gdkaudio_vorbis PROPERTIES EXPORT_NAME audio_vorbis PREFIX "lib" C_STANDARD 99)
 
 target_compile_features(gdkaudio_vorbis PUBLIC cxx_std_20)
 
-set_property(TARGET gdkaudio_vorbis PROPERTY C_STANDARD 99)
+target_link_libraries(gdkaudio_vorbis PUBLIC gdkaudio)
+
+target_compile_definitions(gdkaudio_vorbis PRIVATE STB_VORBIS_NO_STDIO=1)
+
+set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/src/ext/stb_vorbis.c" PROPERTIES
+    COMPILE_OPTIONS "$<$<C_COMPILER_ID:Clang,AppleClang>:-Wno-tautological-compare>;$<$<C_COMPILER_ID:MSVC>:/WX->")
+
+add_library(gdkaudio_implementation INTERFACE)
+
+target_include_directories(gdkaudio_implementation INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/src/include")
+
+target_link_libraries(gdkaudio_implementation INTERFACE gdkaudio)
 
 add_library(gdkaudio_conformance INTERFACE)
 
 target_sources(gdkaudio_conformance INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/context_conformance.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/emitter_conformance.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/scene_conformance.cpp)
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/context_conformance.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/emitter_conformance.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/conformance/scene_conformance.cpp")
 
-target_include_directories(gdkaudio_conformance INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/conformance)
+target_include_directories(gdkaudio_conformance INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/test/conformance")
 
-target_link_libraries(gdkaudio_conformance INTERFACE
-    gdkaudio)
+target_link_libraries(gdkaudio_conformance INTERFACE gdkaudio)
 
-if (JFC_BUILD_TESTS)
+install(TARGETS gdkaudio gdkaudio_vorbis
+    EXPORT gdk-audio-targets
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+install(DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/impl/null/include/"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+install(EXPORT gdk-audio-targets
+    FILE gdk-audio-targets.cmake
+    NAMESPACE gdk::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/gdk-audio")
+
+write_basic_package_version_file(
+    "${PROJECT_BINARY_DIR}/gdk-audio-config-version.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+file(WRITE "${PROJECT_BINARY_DIR}/gdk-audio-config.cmake"
+"include(CMakeFindDependencyMacro)
+find_dependency(gdk-math 1)
+include(\"\${CMAKE_CURRENT_LIST_DIR}/gdk-audio-targets.cmake\")
+")
+
+install(FILES
+    "${PROJECT_BINARY_DIR}/gdk-audio-config.cmake"
+    "${PROJECT_BINARY_DIR}/gdk-audio-config-version.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/gdk-audio")
+
+if (GDKAUDIO_BUILD_TESTS)
     add_subdirectory(test)
 endif()
 
-if (JFC_BUILD_DOCS)
+if (GDKAUDIO_BUILD_DOCS)
     add_subdirectory(docs)
 endif()
