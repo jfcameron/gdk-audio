@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <gdk/audio/exception.h>
 #include <gdk/audio/insert_effect.h>
@@ -57,6 +57,8 @@ namespace gdk::audio
             void process(std::span<std::byte> aPCM, const pcm_format aFormat,
                 const std::size_t aChannelCount) override
             {
+                if (!aChannelCount) return;
+
                 const auto aFrames = aPCM.size() / (aChannelCount * bytes_per_sample(aFormat));
 
                 m_Previous.resize(aChannelCount, 0.0f);
@@ -104,6 +106,8 @@ namespace gdk::audio
             void process(std::span<std::byte> aPCM, const pcm_format aFormat,
                 const std::size_t aChannelCount) override
             {
+                if (!aChannelCount) return;
+
                 const auto aFrames = aPCM.size() / (aChannelCount * bytes_per_sample(aFormat));
 
                 if (m_Delay.empty()) return;

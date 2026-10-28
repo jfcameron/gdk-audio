@@ -1,20 +1,23 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_AUDIO_NULL_MICROPHONE_H
 #define GDK_AUDIO_NULL_MICROPHONE_H
 
 #include <gdk/audio/microphone.h>
 
-#include <gdk/audio/ext/capture_buffer.h>
-
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace gdk::audio {
+    class capture_buffer;
+
     /// \brief a microphone a test speaks into
     class null_microphone final : public microphone {
     public:
         explicit null_microphone(request aRequest);
+
+        virtual ~null_microphone() override;
 
         [[nodiscard]] virtual std::size_t sample_rate() const override;
         [[nodiscard]] virtual std::size_t channel_count() const override;
@@ -52,7 +55,7 @@ namespace gdk::audio {
 
         std::vector<unsigned char> mPending;
 
-        ext::capture_buffer mCaptured;
+        std::unique_ptr<capture_buffer> m_pCaptured;
 
         bool mCapturing{false};
     };

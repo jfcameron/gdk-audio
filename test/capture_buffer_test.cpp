@@ -1,9 +1,9 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
 
 #include <gdk/audio/exception.h>
-#include <gdk/audio/ext/capture_buffer.h>
+#include <gdk/audio/impl_capture_buffer.h>
 
 #include <cstddef>
 #include <span>
@@ -27,7 +27,7 @@ namespace {
 }
 
 TEST_CASE("a capture buffer holds whole frames up to its capacity", "[ext][capture_buffer]") {
-    ext::capture_buffer buffer(4, BYTES_PER_FRAME, false);
+    capture_buffer buffer(4, BYTES_PER_FRAME, false);
 
     REQUIRE(buffer.capacity_in_frames() == 4);
     REQUIRE(buffer.available_in_frames() == 0);
@@ -57,7 +57,7 @@ TEST_CASE("a full capture buffer keeps the oldest or the newest, as it was made 
     std::vector<unsigned char> out(4 * BYTES_PER_FRAME);
 
     SECTION("keeping the oldest, it refuses the newest and says so") {
-        ext::capture_buffer buffer(4, BYTES_PER_FRAME, false);
+        capture_buffer buffer(4, BYTES_PER_FRAME, false);
 
         REQUIRE_FALSE(buffer.append(first.data(), first.size()));
         REQUIRE(buffer.append(second.data(), second.size()));
@@ -70,7 +70,7 @@ TEST_CASE("a full capture buffer keeps the oldest or the newest, as it was made 
     }
 
     SECTION("dropping the oldest, it makes room") {
-        ext::capture_buffer buffer(4, BYTES_PER_FRAME, true);
+        capture_buffer buffer(4, BYTES_PER_FRAME, true);
 
         REQUIRE_FALSE(buffer.append(first.data(), first.size()));
         REQUIRE_FALSE(buffer.append(second.data(), second.size()));
@@ -88,7 +88,7 @@ TEST_CASE("a full capture buffer keeps the oldest or the newest, as it was made 
 }
 
 TEST_CASE("a capture buffer hands frames out whole", "[ext][capture_buffer]") {
-    ext::capture_buffer buffer(8, BYTES_PER_FRAME, false);
+    capture_buffer buffer(8, BYTES_PER_FRAME, false);
 
     const auto five = frames(5);
 
@@ -127,18 +127,18 @@ TEST_CASE("a microphone request no device could honour is refused, with the same
         .capacity_in_frames = 100,
     };
 
-    REQUIRE(&ext::validated(good) == &good);
+    REQUIRE(&validated(good) == &good);
 
     auto request = good;
 
     request.channel_count = 0;
-    REQUIRE_THROWS_WITH(ext::validated(request), Catch::Contains("no channels"));
+    REQUIRE_THROWS_WITH(validated(request), Catch::Contains("no channels"));
 
     request = good;
     request.sample_rate = 0;
-    REQUIRE_THROWS_WITH(ext::validated(request), Catch::Contains("no sample rate"));
+    REQUIRE_THROWS_WITH(validated(request), Catch::Contains("no sample rate"));
 
     request = good;
     request.capacity_in_frames = 0;
-    REQUIRE_THROWS_WITH(ext::validated(request), Catch::Contains("no capacity"));
+    REQUIRE_THROWS_WITH(validated(request), Catch::Contains("no capacity"));
 }

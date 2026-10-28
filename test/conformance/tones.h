@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_AUDIO_TEST_TONES_H
 #define GDK_AUDIO_TEST_TONES_H

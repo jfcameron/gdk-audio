@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_AUDIO_SOUND_H
 #define GDK_AUDIO_SOUND_H
@@ -73,7 +73,8 @@ namespace gdk::audio
         const std::size_t aFrameCount, const std::size_t aChannelCount,
         const std::size_t aSampleRate, const pcm_format aFormat);
 
-    /// \brief creates a new sound from this one but with only PCM data, no decoder
+    /// \brief creates a new sound from this one but with only PCM data, no decoder. Decodes until the
+    /// stream runs dry, so never returns for a live one
     /// niche use case is for a short sound that is used frequently, where the
     /// increased memory usage of raw PCM is worth paying for the decreased compexity
     /// of not having to manage a decoder and multiple buffers

@@ -1,8 +1,9 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <gdk/audio/null_microphone.h>
 
 #include <gdk/audio/exception.h>
+#include <gdk/audio/impl_capture_buffer.h>
 
 #include <algorithm>
 #include <vector>
@@ -10,11 +11,13 @@
 using namespace gdk::audio;
 
 null_microphone::null_microphone(request aRequest)
-: mRequest(ext::validated(aRequest))
+: mRequest(validated(aRequest))
 , mDeviceName(mRequest.device_name.empty() ? "null default device" : mRequest.device_name)
-, mCaptured(mRequest.capacity_in_frames,
-    mRequest.channel_count * bytes_per_sample(mRequest.format), mRequest.drop_oldest_when_full)
+, m_pCaptured(std::make_unique<capture_buffer>(mRequest.capacity_in_frames,
+    mRequest.channel_count * bytes_per_sample(mRequest.format), mRequest.drop_oldest_when_full))
 {}
+
+null_microphone::~null_microphone() = default;
 
 std::size_t null_microphone::sample_rate() const { return mRequest.sample_rate; }
 
@@ -66,30 +69,30 @@ void null_microphone::offer_silence(const std::size_t aFrameCount) {
 void null_microphone::update() {
     if (!mCapturing || mPending.empty()) return;
 
-    if (mCaptured.append(mPending.data(), mPending.size())) mCapturing = false;
+    if (m_pCaptured->append(mPending.data(), mPending.size())) mCapturing = false;
 
     mPending.clear();
 }
 
 std::size_t null_microphone::available_in_frames() const {
-    return mCaptured.available_in_frames();
+    return m_pCaptured->available_in_frames();
 }
 
-bool null_microphone::capacity_reached() const { return mCaptured.capacity_reached(); }
+bool null_microphone::capacity_reached() const { return m_pCaptured->capacity_reached(); }
 
 std::size_t null_microphone::dropped_frame_count() const {
-    return mCaptured.dropped_frame_count();
+    return m_pCaptured->dropped_frame_count();
 }
 
 sound_shared_ptr_type null_microphone::take() {
-    const auto bytes = mCaptured.take();
+    const auto bytes = m_pCaptured->take();
 
     return make_pcm_sound(bytes.empty() ? nullptr : bytes.data(), bytes.size() / bytes_per_frame(),
         mRequest.channel_count, mRequest.sample_rate, mRequest.format);
 }
 
 std::size_t null_microphone::read(std::span<std::byte> aOut) {
-    return mCaptured.read(aOut);
+    return m_pCaptured->read(aOut);
 }
 
-void null_microphone::discard() { mCaptured.clear(); }
+void null_microphone::discard() { m_pCaptured->clear(); }

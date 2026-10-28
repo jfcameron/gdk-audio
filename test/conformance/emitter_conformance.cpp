@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
 
@@ -10,7 +10,9 @@
 #include <gdk/audio/scene.h>
 #include <gdk/audio/sound.h>
 
+#include <chrono>
 #include <memory>
+#include <thread>
 
 using namespace gdk::audio;
 using gdk::audio::conformance::implementation;
@@ -196,4 +198,59 @@ TEST_CASE("conformance, an emitter plays through the shipped inserts", "[conform
 
         REQUIRE(pEmitter->is_playing());
     }
+}
+
+namespace {
+    void run_for(scene &aScene, const double aSeconds) {
+        const auto end = std::chrono::steady_clock::now() + std::chrono::duration<double>(aSeconds);
+
+        while (std::chrono::steady_clock::now() < end) {
+            aScene.update();
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+}
+
+TEST_CASE("conformance, play() on a playing emitter starts its sound again", "[conformance][emitter][position]") {
+    INFO("implementation " << implementation());
+
+    fixture f;
+
+    for (const auto &pSound : {short_tone(), long_tone()}) {
+        INFO("a sound of " << pSound->duration() << " seconds");
+
+        const auto pEmitter = f.pScene->make_emitter(pSound);
+
+        pEmitter->play();
+        run_for(*f.pScene, 0.4);
+
+        const auto before = pEmitter->playback_position();
+
+        pEmitter->play();
+        f.pScene->update();
+
+        REQUIRE(pEmitter->is_playing());
+
+        if (const auto after = pEmitter->playback_position(); before && after)
+            REQUIRE(*after < *before);
+    }
+}
+
+TEST_CASE("conformance, a looping emitter's position counts past the sound's end", "[conformance][emitter][position][loop]") {
+    INFO("implementation " << implementation());
+
+    fixture f;
+
+    const auto pSound = tiny_tone();
+    const auto pEmitter = f.pScene->make_emitter(pSound);
+
+    pEmitter->set_looping(true);
+    pEmitter->play();
+    run_for(*f.pScene, 0.6);
+
+    REQUIRE(pEmitter->is_playing());
+
+    if (const auto position = pEmitter->playback_position())
+        REQUIRE(*position > pSound->duration() * static_cast<double>(pSound->sample_rate()));
 }

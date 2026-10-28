@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_AUDIO_MICROPHONE_H
 #define GDK_AUDIO_MICROPHONE_H
@@ -8,6 +8,8 @@
 
 #include <cstddef>
 #include <span>
+#include <string>
+#include <string_view>
 
 namespace gdk::audio {
     /// \brief captures audio from an input device
@@ -66,7 +68,7 @@ namespace gdk::audio {
         /// \brief take everything captured so far as one sound, emptying the buffer
         [[nodiscard]] virtual sound_shared_ptr_type take() = 0;
 
-        /// \brief copy out up to aFrameCount frames, removing them from the buffer
+        /// \brief copy out as many whole frames as fit in aOut, removing them from the buffer; returns how many
         virtual std::size_t read(std::span<std::byte> aOut) = 0;
 
         //! throw away what is held without taking it
