@@ -16,10 +16,19 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
 option(GDKAUDIO_BUILD_TESTS "Build unit tests" ${PROJECT_IS_TOP_LEVEL})
 option(GDKAUDIO_BUILD_DOCS "Build documentation" OFF)
 
-if (GDKAUDIO_BUILD_DOCS AND NOT GDKAUDIO_BUILD_TESTS)
-    add_subdirectory(docs)
+if (GDKAUDIO_BUILD_DOCS)
+    jfc_generate_documentation_doxygen(
+        README_PATH      README.md
+        OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/docs
 
-    return()
+        INCLUDE_DIRECTORIES
+            include/
+            impl/null/include/
+    )
+
+    if (NOT GDKAUDIO_BUILD_TESTS)
+        return()
+    endif()
 endif()
 
 file(GLOB_RECURSE _gdk_audio_own_sources
@@ -157,8 +166,4 @@ install(FILES
 
 if (GDKAUDIO_BUILD_TESTS)
     add_subdirectory(test)
-endif()
-
-if (GDKAUDIO_BUILD_DOCS)
-    add_subdirectory(docs)
 endif()
