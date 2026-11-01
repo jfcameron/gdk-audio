@@ -105,7 +105,12 @@ namespace gdk::audio::ext
         };
     }
 
-    sound_shared_ptr_type make_vorbis_sound(std::vector<std::byte> aData)
+    sound_shared_ptr_type make_vorbis_sound(const std::span<const std::byte> aData)
+    {
+        return make_vorbis_sound(std::vector<std::byte>(aData.begin(), aData.end()));
+    }
+
+    sound_shared_ptr_type make_vorbis_sound(std::vector<std::byte> &&aData)
     {
         return sound_shared_ptr_type(new vorbis_sound(std::move(aData)));
     }

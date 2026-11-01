@@ -29,6 +29,12 @@ namespace {
 }
 
 TEST_CASE("ogg vorbis is decoded, and anything else refused", "[ext][vorbis]") {
+    SECTION("bytes the caller keeps are copied, wherever they live") {
+        const auto bytes = std::as_bytes(std::span(short_tone_ogg));
+
+        REQUIRE(ext::make_vorbis_sound(bytes)->channel_count() == 1);
+    }
+
     SECTION("a well formed vorbis buffer yields a sound") {
         REQUIRE(ext::make_vorbis_sound(bytes_of(short_tone_ogg)) != nullptr);
     }
@@ -38,7 +44,7 @@ TEST_CASE("ogg vorbis is decoded, and anything else refused", "[ext][vorbis]") {
     }
 
     SECTION("an empty buffer is refused") {
-        REQUIRE_THROWS_AS(ext::make_vorbis_sound({}), exception);
+        REQUIRE_THROWS_AS(ext::make_vorbis_sound(std::span<const std::byte>{}), exception);
     }
 
     SECTION("a buffer cut short after its header is refused") {

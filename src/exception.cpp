@@ -2,12 +2,14 @@
 
 #include <gdk/audio/exception.h>
 
-using namespace gdk::audio;
+namespace gdk::audio {
+    exception::exception()
+    : exception("gdk::audio::exception")
+    {}
 
-const char *exception::what() const noexcept {
-    return mWhat.c_str();
+    exception::exception(const std::string &aWhat)
+    : mpWhat(std::make_shared<const std::string>(aWhat))
+    {}
+
+    const char *exception::what() const noexcept { return mpWhat->c_str(); }
 }
-
-exception::exception(std::string aWhat)
-: mWhat(std::move(aWhat))
-{}

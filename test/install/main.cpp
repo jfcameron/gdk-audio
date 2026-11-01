@@ -4,7 +4,9 @@
 #include <gdk/audio/ext/vorbis.h>
 #include <gdk/audio/null_context.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <span>
 
 int main() {
     using namespace gdk::audio;
@@ -19,7 +21,7 @@ int main() {
     pScene->update();
 
     try {
-        static_cast<void>(ext::make_vorbis_sound({}));
+        static_cast<void>(ext::make_vorbis_sound(std::span<const std::byte>{}));
 
         return 1;
     }
