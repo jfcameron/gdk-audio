@@ -6,22 +6,24 @@
 #include <gdk/audio/types.h>
 
 #include <exception>
+#include <memory>
 #include <string>
 
 namespace gdk::audio {
     /// \brief root exception type for this project
     class exception : public std::exception {
+        std::shared_ptr<const std::string> mpWhat;
+
     public:
-        exception() = default;
+        exception();
 
-        exception(std::string aWhat);
+        exception(const std::string &aWhat);
 
-        virtual ~exception() override = default;
+        exception(const exception &aOther) noexcept = default;
 
-        virtual const char *what() const noexcept override;
+        exception &operator=(const exception &aOther) noexcept = default;
 
-    private:
-        std::string mWhat = "gdk::audio::exception";
+        const char *what() const noexcept override;
     };
 }
 
